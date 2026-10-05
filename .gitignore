@@ -1,0 +1,28 @@
+# Images and embeddings live outside the repository (see data_root in configs/default.yaml).
+# These patterns are the backstop in case someone points data_root inside it.
+/data/
+*.tar.gz
+*.npy
+*.npz
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Environments and tooling
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Local credentials. Never commit these.
+.env

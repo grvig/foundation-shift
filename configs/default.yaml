@@ -1,0 +1,13 @@
+# Single source of truth for every run in this project.
+#
+# Nothing outside this file sets a seed, a split or a hyperparameter. If a number here
+# changes, every CSV in results/ has to be regenerated.
+
+seed: 20261005
+
+paths:
+  # Images (about 21 GB) and cached embeddings live outside the repository, and outside
+  # any synced folder such as OneDrive. The WILDS_DATA environment variable overrides this.
+  data_root: ~/wilds-data
+  results_dir: results
+  figures_dir: figures

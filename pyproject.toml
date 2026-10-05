@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foundation-shift"
+version = "0.1.0"
+description = "Whether large pretrained vision models stay accurate under real deployment shift, tested on WILDS"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "pyarrow>=14.0",
+    "scipy>=1.11",
+    "scikit-learn>=1.4",
+    "matplotlib>=3.8",
+    "PyYAML>=6.0",
+    "Pillow>=10.0",
+    "certifi>=2024.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools]
+packages = ["src", "src.data", "src.evaluation"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
