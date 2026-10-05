@@ -11,3 +11,18 @@ paths:
   data_root: ~/wilds-data
   results_dir: results
   figures_dir: figures
+
+datasets:
+  camelyon17:
+    version: "1.0"
+    url: https://worksheets.codalab.org/rest/bundles/0xe45e15f39fb54e9d9e919556af67aabe/contents/blob/
+    archive_name: camelyon17_v1.0.tar.gz
+    # Size of the archive as recorded by the WILDS package. CodaLab publishes no checksum,
+    # so an exact byte count is the integrity check.
+    archive_bytes: 10658709504
+    extract_subdir: camelyon17_v1.0
+    # Official WILDS split: train on hospitals 0, 3 and 4, validate out of distribution on
+    # hospital 1, test on hospital 2. No image from hospitals 1 or 2 is seen in training.
+    val_center: 1
+    test_center: 2
+    metric: accuracy
