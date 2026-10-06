@@ -1,0 +1,6 @@
+dataset,backbone,c,id_val,ood_val,test
+camelyon17,resnet50,0.0010,0.9668,0.8962,0.9051
+camelyon17,resnet50,0.0100,0.9702,0.9033,0.8948
+camelyon17,resnet50,0.1000,0.9701,0.9047,0.8875
+camelyon17,resnet50,1.0000,0.9701,0.9045,0.8884
+camelyon17,resnet50,10.0000,0.9702,0.9041,0.8888
