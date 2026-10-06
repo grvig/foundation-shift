@@ -61,6 +61,8 @@ backbones:
 
 embedding:
   batch_size: 128
+  # About 400 images/s reach the GPU whether 4 or 8 workers decode, so 4 it is. That is
+  # below what ResNet-50 could take but above what the three transformer backbones can.
   num_workers: 4
   # Embeddings are written in shards so an interrupted run resumes from the last shard.
   shard_size: 50000
