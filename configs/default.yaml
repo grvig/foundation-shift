@@ -26,3 +26,30 @@ datasets:
     val_center: 1
     test_center: 2
     metric: accuracy
+
+# The four pretrained image models compared. Each turns an image into one vector; every
+# method in this project works from those vectors or fine-tunes the model behind them.
+backbones:
+  # Supervised on ImageNet labels. The pre-foundation-model baseline.
+  resnet50:
+    library: timm
+    name: resnet50.tv_in1k
+    image_size: 224
+  # Contrastive image-text training on 400M web pairs.
+  clip_b16:
+    library: open_clip
+    name: ViT-B-16
+    pretrained: openai
+    image_size: 224
+  # Image-text training with a sigmoid loss on a larger web corpus.
+  siglip_b16:
+    library: open_clip
+    name: ViT-B-16-SigLIP
+    pretrained: webli
+    image_size: 224
+  # Self-supervised on images alone, no labels and no text. Trained at 518 pixels; run at
+  # 224 like the others, with timm interpolating the position embeddings.
+  dinov2_b14:
+    library: timm
+    name: vit_base_patch14_dinov2.lvd142m
+    image_size: 224

@@ -22,9 +22,15 @@ result twice: on familiar data (in-distribution) and on the unseen domain
 ## Setup
 
 ```
+python -m venv .venv
+.venv\Scripts\activate
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 pip install -r requirements.txt
 python -m pytest
 ```
+
+The first install line is for an NVIDIA GPU. Without one, drop it and pip installs the
+CPU build; everything except embedding extraction and fine-tuning runs fine on CPU.
 
 Images and embeddings live outside the repository, in `~/wilds-data` by default. Set the
 `WILDS_DATA` environment variable to keep them somewhere else. Never put them in a synced

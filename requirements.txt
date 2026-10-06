@@ -8,3 +8,9 @@ PyYAML>=6.0
 Pillow>=10.0
 certifi>=2024.2
 pytest>=8.0
+# Pretrained models. Install torch and torchvision first from the PyTorch index for your
+# GPU (see README), or pip will pick the CPU-only build.
+torch>=2.4
+torchvision>=0.19
+timm>=1.0
+open_clip_torch>=2.26
