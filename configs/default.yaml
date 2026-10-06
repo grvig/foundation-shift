@@ -53,3 +53,9 @@ backbones:
     library: timm
     name: vit_base_patch14_dinov2.lvd142m
     image_size: 224
+
+embedding:
+  batch_size: 128
+  num_workers: 4
+  # Embeddings are written in shards so an interrupted run resumes from the last shard.
+  shard_size: 50000

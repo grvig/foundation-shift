@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from download_data import check_size
 from download_data import extract
-from download_data import locate_dataset_dir
+from src.data.datasets import locate_dataset_dir
 
 
 def make_archive(path, members):

@@ -27,9 +27,9 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from src.config import load_config
+from src.data.datasets import locate_dataset_dir
 
 CHUNK_SIZE = 1024 * 1024
-MARKER_FILE = "metadata.csv"
 
 
 def open_url(url):
@@ -85,16 +85,6 @@ def extract(archive_path, target):
         # The "data" filter rejects absolute paths, ".." components and links that point
         # outside the target, so a malformed archive cannot write elsewhere on disk.
         archive.extractall(target, filter="data")
-
-
-def locate_dataset_dir(target):
-    """The folder holding metadata.csv: the target itself, or one level below it."""
-    if (target / MARKER_FILE).exists():
-        return target
-    for child in sorted(target.iterdir()):
-        if child.is_dir() and (child / MARKER_FILE).exists():
-            return child
-    raise FileNotFoundError("no " + MARKER_FILE + " found under " + str(target))
 
 
 def main():
