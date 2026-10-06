@@ -18,7 +18,7 @@ def locate_dataset_dir(target):
             if child.is_dir() and (child / MARKER_FILE).exists():
                 return child
     raise FileNotFoundError("no " + MARKER_FILE + " found under " + str(target)
-                            + "; run scripts/download_data.py first")
+                            + "; run scripts/prepare_data.py first")
 
 
 def dataset_dir(config, name):

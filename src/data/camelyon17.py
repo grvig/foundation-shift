@@ -36,8 +36,12 @@ def load_metadata(dataset_dir, val_center, test_center):
     path = dataset_dir / METADATA_FILE
     if not path.exists():
         raise FileNotFoundError("no " + METADATA_FILE + " in " + str(dataset_dir)
-                                + "; run scripts/download_data.py first")
+                                + "; run scripts/prepare_data.py first")
     frame = pd.read_csv(path, index_col=0, dtype={"patient": str})
+    # Row position is the image id the mirror and the embeddings are keyed on, so the
+    # file's own index column must be exactly 0, 1, 2, ... for that to be safe.
+    if list(frame.index) != list(range(len(frame))):
+        raise ValueError(METADATA_FILE + " rows are not numbered 0 to n-1 in order")
     frame = frame.reset_index(drop=True)
     frame["split"] = assign_splits(frame, val_center, test_center)
     frame["path"] = image_paths(frame)
@@ -69,6 +73,25 @@ def image_paths(frame):
                 + "_y_" + str(int(row["y_coord"])) + ".png")
         paths.append("patches/" + stem + "/" + name)
     return paths
+
+
+MIRROR_FIELDS = [("patient", "patient"), ("node", "node"), ("x_coord", "x_coord"),
+                 ("y_coord", "y_coord"), ("slide", "slide"), ("center", "center"),
+                 ("tumor", "label")]
+
+
+def mirror_mismatches(official, mirror):
+    """Fields where a mirror row disagrees with the official row it claims to be.
+
+    The mirror's ``image_id`` is the row number in the official metadata. Patient ids
+    are compared as numbers, since the official file pads them ("004") and the mirror
+    does not.
+    """
+    wrong = []
+    for official_field, mirror_field in MIRROR_FIELDS:
+        if int(official[official_field]) != int(mirror[mirror_field]):
+            wrong.append(official_field)
+    return wrong
 
 
 def split_frame(frame, name):

@@ -15,11 +15,16 @@ paths:
 datasets:
   camelyon17:
     version: "1.0"
-    url: https://worksheets.codalab.org/rest/bundles/0xe45e15f39fb54e9d9e919556af67aabe/contents/blob/
-    archive_name: camelyon17_v1.0.tar.gz
-    # Size of the archive as recorded by the WILDS package. CodaLab publishes no checksum,
-    # so an exact byte count is the integrity check.
-    archive_bytes: 10658709504
+    # The official WILDS bundle. Single files download fine from it, so labels, hospitals
+    # and splits come from here: metadata.csv is the source of truth for every number.
+    bundle_url: https://worksheets.codalab.org/rest/bundles/0xe45e15f39fb54e9d9e919556af67aabe/contents/blob/
+    # The images come from a copy on Hugging Face, pinned to one revision. The bundle can
+    # only be fetched whole as a 10 GB stream that cannot resume, and it dropped partway
+    # through more than once. Every mirror row is checked against the official metadata,
+    # and a sample of images is compared pixel by pixel with the official files.
+    mirror_repo: wltjr1007/Camelyon17-WILDS
+    mirror_revision: d784d5344ba6c967f83f9f3d9b2f1e2a4d6eb78f
+    spot_checks: 100
     extract_subdir: camelyon17_v1.0
     # Official WILDS split: train on hospitals 0, 3 and 4, validate out of distribution on
     # hospital 1, test on hospital 2. No image from hospitals 1 or 2 is seen in training.

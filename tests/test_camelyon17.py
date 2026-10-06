@@ -58,7 +58,7 @@ def test_an_unknown_split_code_fails_loudly(tmp_path):
 
 
 def test_a_missing_file_says_how_to_get_it(tmp_path):
-    with pytest.raises(FileNotFoundError, match="download_data"):
+    with pytest.raises(FileNotFoundError, match="prepare_data"):
         load_metadata(tmp_path, val_center=1, test_center=2)
 
 
@@ -68,4 +68,4 @@ def test_the_config_matches_the_official_split():
     settings = load_config().dataset("camelyon17")
     assert settings["val_center"] == 1
     assert settings["test_center"] == 2
-    assert settings["archive_bytes"] == 10658709504
+    assert len(settings["mirror_revision"]) == 40

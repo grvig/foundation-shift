@@ -32,6 +32,19 @@ python -m pytest
 The first install line is for an NVIDIA GPU. Without one, drop it and pip installs the
 CPU build; everything except embedding extraction and fine-tuning runs fine on CPU.
 
+Then fetch and verify the data (about 15 minutes on a fast connection) and embed it:
+
+```
+python scripts/prepare_data.py camelyon17
+python scripts/embed.py camelyon17 all
+```
+
+Labels, hospitals and splits come from the official WILDS metadata. The images come from
+a pinned copy on Hugging Face, because the official bundle only downloads as a single
+10 GB stream that cannot resume. Every copied row is checked against the official
+metadata, and a random sample of images is compared pixel by pixel with the official
+files; preparation stops on any disagreement.
+
 Images and embeddings live outside the repository, in `~/wilds-data` by default. Set the
 `WILDS_DATA` environment variable to keep them somewhere else. Never put them in a synced
 folder such as OneDrive.
