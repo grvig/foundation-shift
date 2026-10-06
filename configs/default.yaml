@@ -70,3 +70,19 @@ linear_probe:
   # A real deployment has no labelled data from the new site, so choosing on the
   # in-distribution split is reported too; the gap between the two is a finding in itself.
   selection_splits: [ood_val, id_val]
+
+# Classification from written descriptions alone, for the image-text backbones. Each class
+# is described once per template; the template embeddings are averaged into one vector
+# per class (prompt ensembling). Prompts are fixed here before any result is seen, so
+# they cannot be tuned against the test hospital.
+zero_shot:
+  camelyon17:
+    # One description per label, in label order: 0 = normal, 1 = tumour. American
+    # spelling, as in most of the web text these models were trained on.
+    classes:
+      - "normal lymph node tissue"
+      - "lymph node tissue containing metastatic tumor"
+    templates:
+      - "a histopathology image of {}."
+      - "an H&E stained microscope image of {}."
+      - "a close-up pathology slide of {}."
