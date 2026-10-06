@@ -59,3 +59,14 @@ embedding:
   num_workers: 4
   # Embeddings are written in shards so an interrupted run resumes from the last shard.
   shard_size: 50000
+
+# A logistic regression on frozen embeddings. The backbone is untouched, so this measures
+# how much of the task is already linearly readable from what the backbone learned.
+linear_probe:
+  # Inverse regularisation strengths tried; one is chosen on a validation split.
+  c_grid: [0.001, 0.01, 0.1, 1.0, 10.0]
+  max_iter: 2000
+  # WILDS chooses hyperparameters on the out-of-distribution validation split (hospital 1).
+  # A real deployment has no labelled data from the new site, so choosing on the
+  # in-distribution split is reported too; the gap between the two is a finding in itself.
+  selection_splits: [ood_val, id_val]
