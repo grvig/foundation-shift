@@ -91,3 +91,8 @@ zero_shot:
       - "a histopathology image of {}."
       - "an H&E stained microscope image of {}."
       - "a close-up pathology slide of {}."
+
+# Intervals resample whole slides, not patches (see src/evaluation/bootstrap.py).
+bootstrap:
+  resamples: 1000
+  cluster_column: slide

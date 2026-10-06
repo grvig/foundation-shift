@@ -73,6 +73,10 @@ def test_the_main_table_has_both_selection_rules(setup, monkeypatch):
     assert list(table["backbone"]) == ["resnet50", "resnet50"]
     assert list(table["selection"]) == ["ood_val", "id_val"]
     assert (table["test"] > 0.9).all()
+    assert (table["test_low"] <= table["test"]).all()
+    assert (table["test"] <= table["test_high"]).all()
+    saved = results.parent / "data" / "predictions" / "camelyon17"
+    assert (saved / "resnet50_linear_probe_ood_val.npy").exists()
     sweep = pd.read_csv(results / "camelyon17_probe_sweep.csv")
     assert list(sweep["c"]) == [0.1, 1.0]
 
