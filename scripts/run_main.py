@@ -12,6 +12,9 @@ Writes two CSVs to results/:
     test_low and test_high are a 95% interval from resampling whole slides.
 ``<dataset>_probe_sweep.csv``
     Every C tried for every backbone, so the selection can be audited.
+``<dataset>_per_domain.csv``
+    Every method's score inside each hospital on each split. The pooled in-distribution
+    score is dominated by the largest training hospital; this shows the smallest too.
 
 Backbones without finished embeddings are skipped with a message rather than failing,
 so the table can be filled in one backbone at a time.
@@ -34,6 +37,7 @@ from src.data.datasets import load_metadata
 from src.embeddings.store import load_embeddings
 from src.evaluation.bootstrap import cluster_bootstrap
 from src.evaluation.metrics import metric_function
+from src.evaluation.metrics import per_domain
 from src.methods.linear_probe import EVALUATION_SPLITS
 from src.methods.linear_probe import select
 from src.methods.linear_probe import sweep
@@ -64,6 +68,14 @@ def score_row(context, backbone, method, selection, c, predictions):
                                      context["resamples"], context["config"].fresh_rng())
     row["test_low"] = low
     row["test_high"] = high
+    for split in EVALUATION_SPLITS:
+        mask = splits == split
+        scores = per_domain(labels[mask], predictions[mask], context["domains"][mask],
+                            context["metric"])
+        for domain in sorted(scores.keys()):
+            context["domain_rows"].append({"backbone": backbone, "method": method,
+                                           "selection": selection, "split": split,
+                                           "domain": domain, "score": scores[domain]})
     directory = context["predictions_dir"]
     directory.mkdir(parents=True, exist_ok=True)
     np.save(directory / (backbone + "_" + method + "_" + selection + ".npy"),
@@ -90,6 +102,8 @@ def main():
                "labels": labels, "splits": splits,
                "clusters": metadata[bootstrap["cluster_column"]].to_numpy(),
                "resamples": int(bootstrap["resamples"]),
+               "domains": metadata[settings["domain_column"]].to_numpy(),
+               "domain_rows": [],
                "predictions_dir": config.data_root() / "predictions" / args.dataset}
 
     main_rows = []
@@ -127,6 +141,8 @@ def main():
                  float_format="%.4f")
     pd.DataFrame(sweep_rows).to_csv(results_dir / (args.dataset + "_probe_sweep.csv"),
                                     index=False, float_format="%.4f")
+    pd.DataFrame(context["domain_rows"]).to_csv(
+        results_dir / (args.dataset + "_per_domain.csv"), index=False, float_format="%.4f")
     print(table.to_string(index=False, float_format=format_score))
 
 

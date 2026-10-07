@@ -31,6 +31,8 @@ datasets:
     val_center: 1
     test_center: 2
     metric: accuracy
+    # What counts as one domain when results are broken down.
+    domain_column: center
 
 # The four pretrained image models compared. Each turns an image into one vector; every
 # method in this project works from those vectors or fine-tunes the model behind them.

@@ -77,6 +77,11 @@ def test_the_main_table_has_both_selection_rules(setup, monkeypatch):
     assert (table["test"] <= table["test_high"]).all()
     saved = results.parent / "data" / "predictions" / "camelyon17"
     assert (saved / "resnet50_linear_probe_ood_val.npy").exists()
+    domains = pd.read_csv(results / "camelyon17_per_domain.csv")
+    id_rows = domains[(domains["split"] == "id_val") & (domains["selection"] == "ood_val")]
+    assert sorted(id_rows["domain"]) == [0, 3, 4]
+    test_rows = domains[domains["split"] == "test"]
+    assert set(test_rows["domain"]) == {2}
     sweep = pd.read_csv(results / "camelyon17_probe_sweep.csv")
     assert list(sweep["c"]) == [0.1, 1.0]
 
