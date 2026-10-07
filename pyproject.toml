@@ -27,7 +27,7 @@ dependencies = [
 dev = ["pytest>=8.0"]
 
 [tool.setuptools]
-packages = ["src", "src.data", "src.evaluation", "src.models", "src.embeddings", "src.methods"]
+packages = ["src", "src.data", "src.evaluation", "src.models", "src.embeddings", "src.methods", "src.plots"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
