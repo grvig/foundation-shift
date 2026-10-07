@@ -108,3 +108,17 @@ comparison:
     backbone: resnet50
     method: linear_probe
     selection: ood_val
+
+# Partial fine-tuning: the last few blocks of the image model and a new linear head train,
+# everything before them stays frozen. Frozen layers store no activations for the backward
+# pass, which is what lets a ViT-B train in 4 GB of GPU memory.
+fine_tuning:
+  trainable_blocks: 2
+  # A seeded random subset of the training split; a full pass over 302k images would
+  # take hours per backbone on a laptop GPU.
+  train_images: 60000
+  epochs: 1
+  batch_size: 64
+  backbone_lr: 1.0e-5
+  head_lr: 1.0e-3
+  weight_decay: 0.01
