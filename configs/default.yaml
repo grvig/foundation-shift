@@ -98,3 +98,11 @@ zero_shot:
 bootstrap:
   resamples: 1000
   cluster_column: slide
+
+# Every method is compared with this one on the test hospital, slide-paired. The ImageNet
+# ResNet-50 probe with the WILDS selection rule is the "before foundation models" answer.
+comparison:
+  reference:
+    backbone: resnet50
+    method: linear_probe
+    selection: ood_val
