@@ -109,6 +109,16 @@ zero_shot:
       - "a histopathology image of {}."
       - "an H&E stained microscope image of {}."
       - "a close-up pathology slide of {}."
+  iwildcam:
+    # 182 species: the descriptions are the names in the bundle's categories.csv, so
+    # nobody hand-writes them. Names that would read wrongly in a template are replaced.
+    classes_from: categories
+    class_overrides:
+      empty: "an empty scene with no animal"
+    templates:
+      - "a camera trap photo of a {}."
+      - "a wildlife camera image of a {}."
+      - "a photo of a {} taken by a motion-triggered camera."
 
 # Intervals resample whole clusters (each dataset's cluster_column), not single images;
 # see src/evaluation/bootstrap.py.

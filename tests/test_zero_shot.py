@@ -43,6 +43,22 @@ def test_images_go_to_the_nearest_class_regardless_of_scale():
     assert list(zero_shot_predict(images, text)) == [0, 1, 1]
 
 
+def test_many_class_descriptions_come_from_the_dataset_with_overrides(tmp_path,
+                                                                      monkeypatch):
+    from src.config import DATA_ROOT_VARIABLE
+    from src.methods.zero_shot import class_descriptions
+
+    monkeypatch.setenv(DATA_ROOT_VARIABLE, str(tmp_path))
+    directory = tmp_path / "iwildcam_v2.0"
+    directory.mkdir()
+    (directory / "metadata.csv").write_text("split,location_remapped,y,filename\n"
+                                            "train,0,0,a.jpg\ntrain,0,2,b.jpg\n")
+    (directory / "categories.csv").write_text("y,category_id,name\n0,0,empty\n"
+                                              "2,7,ocelot\n")
+    assert class_descriptions(load_config(), "iwildcam") == [
+        "an empty scene with no animal", "species 1", "ocelot"]
+
+
 def test_the_config_has_one_description_per_label():
     prompts = load_config().section("zero_shot")["camelyon17"]
     assert len(prompts["classes"]) == 2
