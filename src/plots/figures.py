@@ -94,7 +94,11 @@ def plot_on_the_line(points, fit, path):
     high = min(max(points["id_val"].max(), points["test"].max()) + 0.01, 0.999)
     grid = np.linspace(low, high, 100)
     axes.plot(probit(grid), probit(grid), linestyle=":", color=MUTED, linewidth=1)
-    axes.plot(probit(grid), probit(predicted_ood(grid, fit["slope"], fit["intercept"])),
+    # The line is drawn only across the probe points it was fitted on; extending it to
+    # the zero-shot points would show an extrapolation as if it were evidence.
+    probe_ids = points[points["method"] == "linear_probe"]["id_val"]
+    fitted = np.linspace(probe_ids.min(), probe_ids.max(), 50)
+    axes.plot(probit(fitted), probit(predicted_ood(fitted, fit["slope"], fit["intercept"])),
               color=MUTED, linewidth=2)
     for backbone in ordered_backbones(points["backbone"]):
         colour = BACKBONE_COLOURS[backbone]
