@@ -125,13 +125,18 @@ zero_shot:
 bootstrap:
   resamples: 1000
 
-# Every method is compared with this one on the test hospital, slide-paired. The ImageNet
-# ResNet-50 probe with the WILDS selection rule is the "before foundation models" answer.
+# Every method is compared with each reference on the test domain, cluster-paired. The
+# ImageNet ResNet-50 probe with the WILDS selection rule is the "before foundation models"
+# answer. Fine-tuned models are also compared with the fine-tuned ResNet-50, which
+# separates a better pretrained model from simply adapting more of it.
 comparison:
-  reference:
-    backbone: resnet50
-    method: linear_probe
-    selection: ood_val
+  references:
+    - backbone: resnet50
+      method: linear_probe
+      selection: ood_val
+    - backbone: resnet50
+      method: finetune_last2
+      selection: none
 
 # Partial fine-tuning: the last few blocks of the image model and a new linear head train,
 # everything before them stays frozen. Frozen layers store no activations for the backward
