@@ -28,6 +28,22 @@ independent evidence. Every hospital is about 50 percent tumour, so a drop betwe
 columns reflects images that look different, not a different mix of cases.
 
 <!-- results:camelyon17 -->
+| Backbone | Method | Familiar hospitals | New hospital (val) | New hospital (test) | Test 95% interval |
+|---|---|---|---|---|---|
+| ResNet-50 (ImageNet) | linear probe (C on new-hospital val) | 97.0 | 90.5 | **88.8** | 82.4 - 92.4 |
+| ResNet-50 (ImageNet) | linear probe (C on familiar val) | 97.0 | 90.3 | **89.5** | 83.3 - 92.8 |
+| CLIP ViT-B/16 | linear probe (C on new-hospital val) | 95.9 | 88.5 | **89.7** | 85.6 - 92.8 |
+| CLIP ViT-B/16 | linear probe (C on familiar val) | 95.9 | 88.5 | **89.2** | 85.0 - 92.5 |
+| CLIP ViT-B/16 | zero-shot | 58.4 | 49.7 | **60.1** | 50.2 - 80.1 |
+| CLIP ViT-B/16 | WiSE-FT (C on new-hospital val) | 96.0 | 88.6 | **89.7** | 85.7 - 93.0 |
+| CLIP ViT-B/16 | WiSE-FT (C on familiar val) | 96.0 | 88.5 | **89.3** | 85.0 - 92.7 |
+| SigLIP ViT-B/16 | linear probe (C on new-hospital val) | 96.6 | 91.8 | **87.4** | 79.5 - 91.9 |
+| SigLIP ViT-B/16 | linear probe (C on familiar val) | 96.7 | 91.8 | **87.8** | 80.3 - 92.1 |
+| SigLIP ViT-B/16 | zero-shot | 50.5 | 50.0 | **50.0** | 30.5 - 84.9 |
+| SigLIP ViT-B/16 | WiSE-FT (C on new-hospital val) | 96.6 | 92.0 | **88.4** | 81.3 - 92.5 |
+| SigLIP ViT-B/16 | WiSE-FT (C on familiar val) | 96.7 | 91.8 | **87.8** | 80.3 - 92.1 |
+| DINOv2 ViT-B/14 | linear probe (C on new-hospital val) | 97.1 | 92.1 | **91.7** | 89.3 - 95.2 |
+| DINOv2 ViT-B/14 | linear probe (C on familiar val) | 97.1 | 92.1 | **91.7** | 89.3 - 95.2 |
 <!-- /results:camelyon17 -->
 
 The table, the CSVs in `results/` and the figures in `figures/` are all regenerated from
