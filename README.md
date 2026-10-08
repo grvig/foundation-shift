@@ -52,28 +52,37 @@ columns reflects images that look different, not a different mix of cases.
 
 ### What the Camelyon17 results show
 
-Numbers below are from `results/camelyon17_*.csv`; differences are test accuracy against
-the ResNet-50 probe, with 95% intervals from resampling the same slides for both models.
+Numbers below are from `results/camelyon17_*.csv`. Differences are in test accuracy, with
+95% intervals from resampling the same slides for both models (`camelyon17_paired.csv`).
 
-1. **Every model loses 5 to 9 points at a new hospital.** In-distribution accuracy is
-   96 to 97 percent for all four backbones; on the test hospital it is 87 to 92 percent.
-   Pretraining on hundreds of millions of web images did not remove the drop.
-2. **No foundation model is reliably better than the ImageNet ResNet-50.** DINOv2 is
-   highest (91.7 vs 88.8), but the paired interval for the gap, -0.9 to +11.4 points,
-   includes zero. CLIP is +1.0 (-2.6 to +8.7) and SigLIP -1.4 (-6.0 to +0.5). The test
-   hospital contributes only ten slides, and that is the honest width of the evidence.
-3. **Zero-shot classification does not work on pathology.** CLIP reaches 60 percent and
+1. **Every model loses accuracy at a new hospital.** With frozen features (linear
+   probes) the drop from familiar to test hospital is 5 to 9 points; after partial
+   fine-tuning it is 2 to 5. Pretraining on hundreds of millions of web images did not
+   remove it.
+2. **Frozen foundation-model features are not reliably better than an ImageNet
+   ResNet-50.** The DINOv2 probe is highest (91.7 vs 88.8), but the paired interval for
+   the gap, -0.9 to +11.4 points, includes zero. CLIP is +1.0 (-2.6 to +8.7) and SigLIP
+   -1.4 (-6.0 to +0.5). The test hospital contributes only ten slides, and that is the
+   honest width of the evidence.
+3. **Foundation models pull ahead once they are allowed to adapt.** Fine-tuning only the
+   last two blocks, for one epoch on 60,000 of the 302,000 training patches, gives
+   DINOv2 95.6, CLIP 94.9, SigLIP 94.1 and ResNet-50 91.7. Against the fine-tuned
+   ResNet-50, DINOv2 is +3.9 (+2.8 to +6.2) and CLIP +3.2 (+1.4 to +5.0), both clear of
+   zero; SigLIP is +2.4 (-0.3 to +5.1). The same fine-tuning gains ResNet-50 itself only
+   +2.9 over its probe (-0.3 to +8.0). What the large pretraining buys is features that
+   adapt well, not features that are already robust.
+4. **Zero-shot classification does not work on pathology.** CLIP reaches 60 percent and
    SigLIP 50 percent, which is chance on a balanced task: SigLIP labels 99.9 percent of
-   all patches as normal tissue. The web text these models learned from does not describe lymph node
-   histology in a way the prompts can reach.
-4. **WiSE-FT adds nothing here.** The best blends give almost all the weight to the
+   all patches as normal tissue. The web text these models learned from does not
+   describe lymph node histology in a way the prompts can reach.
+5. **WiSE-FT adds nothing here.** The best blends give almost all the weight to the
    trained probe (alpha 0.8 to 1.0) and change test accuracy by at most one point,
    because the zero-shot head it blends in is at chance.
-5. **In-distribution accuracy does not predict new-hospital accuracy.** Across all twenty
+6. **In-distribution accuracy does not predict new-hospital accuracy.** Across all twenty
    probe settings the correlation in probit space is 0.06. "Accuracy on the line" has
    nothing to work with when every model scores 96 to 97 percent on familiar data.
-6. **The two new hospitals disagree about which model is best.** SigLIP is second-best on
-   hospital 1 and worst on hospital 2; CLIP is the reverse. Choosing a model, or its
+7. **The two new hospitals disagree about which model is best.** Among the probes, SigLIP
+   is second-best on hospital 1 and worst on hospital 2; CLIP is the reverse. Choosing a model, or its
    regularisation, on one unseen hospital is weak evidence about another.
 
 The table, the CSVs in `results/` and the figures in `figures/` are all regenerated from
