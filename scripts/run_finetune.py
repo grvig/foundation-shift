@@ -8,6 +8,10 @@ predicts every id_val, ood_val and test image. Appends one row to
 results/<dataset>_finetune.csv, in the same columns as the main table, and saves the
 predictions where run_compare.py can find them.
 
+``--seed N`` repeats the run with a different training subset, batch order and head
+initialisation. Every seed is recorded in results/<dataset>_finetune_seeds.csv; seed 0 is
+also the row the main tables use.
+
 ``--quick`` trains on 512 images and evaluates 512 per split, writing to a separate
 ``_quick`` file, to check a backbone end to end before the real run.
 """
@@ -63,6 +67,8 @@ def main():
     parser.add_argument("dataset")
     parser.add_argument("backbone")
     parser.add_argument("--quick", action="store_true")
+    parser.add_argument("--seed", type=int, default=0,
+                        help="added to the config seed; 0 is the run reported in the tables")
     parser.add_argument("--config", default=None)
     args = parser.parse_args()
 
@@ -75,7 +81,12 @@ def main():
     splits = metadata["split"].to_numpy()
     paths = metadata["path"].to_numpy()
     image_dir = dataset_dir(config, args.dataset)
-    rng = config.fresh_rng()
+    run_seed = config.seed + int(args.seed)
+    # The run seed fixes the training subset, the batch order and the new head's starting
+    # weights. GPU kernels are not bit-exact between runs, so a rerun matches closely
+    # rather than exactly; the spread across seeds is reported for that reason.
+    rng = np.random.default_rng(run_seed)
+    torch.manual_seed(run_seed)
     if torch.cuda.is_available():
         device = torch.device("cuda")
     else:
@@ -100,7 +111,7 @@ def main():
     loader = DataLoader(LabelledImages(image_dir, paths[chosen], labels[chosen],
                                        encoder.transform),
                         batch_size=int(settings["batch_size"]), shuffle=True,
-                        num_workers=workers, generator=torch.Generator().manual_seed(config.seed))
+                        num_workers=workers, generator=torch.Generator().manual_seed(run_seed))
     started = time.time()
     print(args.backbone + ": training on " + str(len(chosen)) + " images")
     train(model, loader, settings, device)
@@ -127,19 +138,33 @@ def main():
         labels[test], predictions[test], clusters[test], dataset_settings["metric"],
         int(bootstrap["resamples"]), config.fresh_rng())
     row["minutes"] = (time.time() - started) / 60.0
+    row["seed"] = int(args.seed)
 
+    results = config.path("results_dir")
     if not args.quick:
         directory = config.data_root() / "predictions" / args.dataset
         directory.mkdir(parents=True, exist_ok=True)
-        np.save(directory / (args.backbone + "_" + method + "_none.npy"), predictions)
-    path = config.path("results_dir") / (args.dataset + "_finetune" + suffix + ".csv")
+        key = args.backbone + "_" + method + "_none"
+        if args.seed != 0:
+            key = args.backbone + "_" + method + "_seed" + str(args.seed)
+        np.save(directory / (key + ".npy"), predictions)
+    # Every seed goes into the seeds file; seed 0 is also the run the main tables use.
+    replace_row(results / (args.dataset + "_finetune_seeds" + suffix + ".csv"), row)
+    if args.seed == 0:
+        replace_row(results / (args.dataset + "_finetune" + suffix + ".csv"), row)
+    print(pd.DataFrame([row]).to_string(index=False))
+
+
+def replace_row(path, row):
+    """Write ``row`` into the CSV, replacing any earlier row for the same backbone and seed."""
     table = pd.DataFrame([row])
     if path.exists():
         previous = pd.read_csv(path)
-        previous = previous[previous["backbone"] != args.backbone]
-        table = pd.concat([previous, table], ignore_index=True)
+        if "seed" not in previous.columns:
+            previous["seed"] = 0
+        keep = (previous["backbone"] != row["backbone"]) | (previous["seed"] != row["seed"])
+        table = pd.concat([previous[keep], table], ignore_index=True)
     table.to_csv(path, index=False, float_format="%.4f")
-    print(pd.DataFrame([row]).to_string(index=False))
 
 
 # Windows starts DataLoader workers by re-importing this file.
