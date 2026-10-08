@@ -105,7 +105,7 @@ def main():
     bootstrap = config.section("bootstrap")
     context = {"config": config, "dataset": args.dataset, "metric": settings["metric"],
                "labels": labels, "splits": splits,
-               "clusters": metadata[bootstrap["cluster_column"]].to_numpy(),
+               "clusters": metadata[settings["cluster_column"]].to_numpy(),
                "resamples": int(bootstrap["resamples"]),
                "domains": metadata[settings["domain_column"]].to_numpy(),
                "domain_rows": [],

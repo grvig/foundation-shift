@@ -31,8 +31,22 @@ datasets:
     val_center: 1
     test_center: 2
     metric: accuracy
-    # What counts as one domain when results are broken down.
+    # What counts as one domain when results are broken down, and what the bootstrap
+    # resamples: whole slides, since patches from one slide are not independent.
     domain_column: center
+    cluster_column: slide
+  iwildcam:
+    version: "2.0"
+    # Official WILDS bundle. Images are fetched one file at a time in parallel: there is
+    # no mirror, and the whole-bundle stream cannot resume.
+    bundle_url: https://worksheets.codalab.org/rest/bundles/0x6313da2b204647e79a14b468131fcd64/contents/blob/
+    fetch_workers: 16
+    extract_subdir: iwildcam_v2.0
+    # Official metric: F1 averaged over the species present in each split.
+    metric: macro_f1
+    # Camera traps are the domains, and the unit the bootstrap resamples.
+    domain_column: location_remapped
+    cluster_column: location_remapped
 
 # The four pretrained image models compared. Each turns an image into one vector; every
 # method in this project works from those vectors or fine-tunes the model behind them.
@@ -96,10 +110,10 @@ zero_shot:
       - "an H&E stained microscope image of {}."
       - "a close-up pathology slide of {}."
 
-# Intervals resample whole slides, not patches (see src/evaluation/bootstrap.py).
+# Intervals resample whole clusters (each dataset's cluster_column), not single images;
+# see src/evaluation/bootstrap.py.
 bootstrap:
   resamples: 1000
-  cluster_column: slide
 
 # Every method is compared with this one on the test hospital, slide-paired. The ImageNet
 # ResNet-50 probe with the WILDS selection rule is the "before foundation models" answer.

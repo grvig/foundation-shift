@@ -122,7 +122,7 @@ def main():
     test = predictions >= 0
     test = test & (splits == "test")
     bootstrap = config.section("bootstrap")
-    clusters = metadata[bootstrap["cluster_column"]].to_numpy()
+    clusters = metadata[dataset_settings["cluster_column"]].to_numpy()
     _, row["test_low"], row["test_high"] = cluster_bootstrap(
         labels[test], predictions[test], clusters[test], dataset_settings["metric"],
         int(bootstrap["resamples"]), config.fresh_rng())

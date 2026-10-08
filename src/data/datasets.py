@@ -1,6 +1,7 @@
 """Find an extracted dataset and load its metadata, by the name used in the config."""
 
 from src.data import camelyon17
+from src.data import iwildcam
 
 MARKER_FILE = "metadata.csv"
 
@@ -32,4 +33,6 @@ def load_metadata(config, name):
     if name == "camelyon17":
         return camelyon17.load_metadata(directory, settings["val_center"],
                                         settings["test_center"])
+    if name == "iwildcam":
+        return iwildcam.load_metadata(directory)
     raise ValueError("no metadata loader for dataset: " + name)

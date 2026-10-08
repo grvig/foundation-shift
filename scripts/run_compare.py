@@ -49,11 +49,12 @@ def main():
     metadata = load_metadata(config, args.dataset)
     test = (metadata["split"] == "test").to_numpy()
     bootstrap = config.section("bootstrap")
+    settings = config.dataset(args.dataset)
     paired = compare_to_reference(
         table, TestPredictions(config.data_root() / "predictions" / args.dataset, test),
         metadata["label"].to_numpy()[test],
-        metadata[bootstrap["cluster_column"]].to_numpy()[test],
-        config.dataset(args.dataset)["metric"], int(bootstrap["resamples"]),
+        metadata[settings["cluster_column"]].to_numpy()[test],
+        settings["metric"], int(bootstrap["resamples"]),
         config.fresh_rng, config.section("comparison")["reference"])
     paired.to_csv(results_dir / (args.dataset + "_paired.csv"), index=False,
                   float_format="%.4f")
