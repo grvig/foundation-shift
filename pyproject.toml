@@ -21,6 +21,7 @@ dependencies = [
     "torchvision>=0.19",
     "timm>=1.0",
     "open_clip_torch>=2.26",
+    "transformers>=4.40",
 ]
 
 [project.optional-dependencies]
