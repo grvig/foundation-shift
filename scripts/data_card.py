@@ -26,11 +26,13 @@ def main():
 
     config = load_config(args.config)
     config.ensure_output_dirs()
-    card = summarise(load_metadata(config, args.dataset))
+    settings = config.dataset(args.dataset)
+    card = summarise(load_metadata(config, args.dataset), settings["domain_column"],
+                     settings["cluster_column"])
     card.to_csv(config.path("results_dir") / (args.dataset + "_data_card.csv"),
                 index=False, float_format="%.4f")
     print(card.to_string(index=False))
-    print("total patches: " + str(int(card["patches"].sum())))
+    print("total images: " + str(int(card["images"].sum())))
 
 
 if __name__ == "__main__":
