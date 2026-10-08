@@ -46,6 +46,32 @@ columns reflects images that look different, not a different mix of cases.
 | DINOv2 ViT-B/14 | linear probe (C on familiar val) | 97.1 | 92.1 | **91.7** | 89.3 - 95.2 |
 <!-- /results:camelyon17 -->
 
+### What the Camelyon17 results show
+
+Numbers below are from `results/camelyon17_*.csv`; differences are test accuracy against
+the ResNet-50 probe, with 95% intervals from resampling the same slides for both models.
+
+1. **Every model loses 5 to 9 points at a new hospital.** In-distribution accuracy is
+   96 to 97 percent for all four backbones; on the test hospital it is 87 to 92 percent.
+   Pretraining on hundreds of millions of web images did not remove the drop.
+2. **No foundation model is reliably better than the ImageNet ResNet-50.** DINOv2 is
+   highest (91.7 vs 88.8), but the paired interval for the gap, -0.9 to +11.4 points,
+   includes zero. CLIP is +1.0 (-2.6 to +8.7) and SigLIP -1.4 (-6.0 to +0.5). The test
+   hospital contributes only ten slides, and that is the honest width of the evidence.
+3. **Zero-shot classification does not work on pathology.** CLIP reaches 60 percent and
+   SigLIP 50 percent, which is chance on a balanced task: SigLIP labels 99.9 percent of
+   all patches as normal tissue. The web text these models learned from does not describe lymph node
+   histology in a way the prompts can reach.
+4. **WiSE-FT adds nothing here.** The best blends give almost all the weight to the
+   trained probe (alpha 0.8 to 1.0) and change test accuracy by at most one point,
+   because the zero-shot head it blends in is at chance.
+5. **In-distribution accuracy does not predict new-hospital accuracy.** Across all twenty
+   probe settings the correlation in probit space is 0.06. "Accuracy on the line" has
+   nothing to work with when every model scores 96 to 97 percent on familiar data.
+6. **The two new hospitals disagree about which model is best.** SigLIP is second-best on
+   hospital 1 and worst on hospital 2; CLIP is the reverse. Choosing a model, or its
+   regularisation, on one unseen hospital is weak evidence about another.
+
 The table, the CSVs in `results/` and the figures in `figures/` are all regenerated from
 the cached embeddings by one command, which runs each analysis script in turn:
 
