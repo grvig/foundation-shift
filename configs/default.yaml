@@ -122,3 +122,8 @@ fine_tuning:
   backbone_lr: 1.0e-5
   head_lr: 1.0e-3
   weight_decay: 0.01
+
+# WiSE-FT on the final layer: logits blended between zero-shot (alpha 0) and the linear
+# probe (alpha 1). Alpha is chosen with the same two selection rules as C.
+wise_ft:
+  alphas: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]

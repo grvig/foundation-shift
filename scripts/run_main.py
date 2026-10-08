@@ -1,4 +1,4 @@
-"""The main comparison: every backbone, linear probe and zero-shot, ID versus OOD.
+"""The main comparison: every backbone, linear probe, zero-shot and WiSE-FT, ID versus OOD.
 
     python scripts/run_main.py camelyon17
 
@@ -12,6 +12,8 @@ Writes two CSVs to results/:
     test_low and test_high are a 95% interval from resampling whole slides.
 ``<dataset>_probe_sweep.csv``
     Every C tried for every backbone, so the selection can be audited.
+``<dataset>_wise_ft_sweep.csv``
+    Every alpha tried for each image-text backbone and selection rule.
 ``<dataset>_per_domain.csv``
     Every method's score inside each hospital on each split. The pooled in-distribution
     score is dominated by the largest training hospital; this shows the smallest too.
@@ -41,7 +43,10 @@ from src.evaluation.metrics import per_domain
 from src.methods.linear_probe import EVALUATION_SPLITS
 from src.methods.linear_probe import select
 from src.methods.linear_probe import sweep
-from src.methods.zero_shot import load_text_side
+from src.methods.wise_ft import alpha_sweep
+from src.methods.wise_ft import blend
+from src.methods.wise_ft import select_alpha
+from src.methods.zero_shot import load_text_head
 from src.methods.zero_shot import zero_shot_predict
 from src.models.backbones import backbone_names
 from src.models.backbones import backbone_settings
@@ -108,6 +113,7 @@ def main():
 
     main_rows = []
     sweep_rows = []
+    wise_rows = []
     for backbone in backbone_names(config):
         try:
             features = load_embeddings(config.data_root(), args.dataset, backbone, paths,
@@ -126,21 +132,40 @@ def main():
             main_rows.append(score_row(context, backbone, "linear_probe", selection, c,
                                        predictions))
         if supports_text(config, backbone):
-            print(backbone + ": zero-shot")
-            text = load_text_side(config, backbone, args.dataset, torch.device("cpu"))
+            print(backbone + ": zero-shot and WiSE-FT")
+            head = load_text_head(config, backbone, args.dataset, torch.device("cpu"))
             main_rows.append(score_row(context, backbone, "zero_shot", "none",
-                                       float("nan"), zero_shot_predict(features, text)))
+                                       float("nan"),
+                                       zero_shot_predict(features, head.vectors)))
+            zero_shot_logits = head.logits(features)
+            for selection in probe["selection_splits"]:
+                c = select(rows, selection)["c"]
+                probe_logits = probes[c].logits(features)
+                alpha_rows = alpha_sweep(zero_shot_logits, probe_logits, labels, splits,
+                                         config.section("wise_ft")["alphas"],
+                                         settings["metric"])
+                for alpha_row in alpha_rows:
+                    wise_rows.append(dict({"backbone": backbone, "selection": selection,
+                                           "c": c}, **alpha_row))
+                alpha = select_alpha(alpha_rows, selection)["alpha"]
+                predictions = np.argmax(blend(zero_shot_logits, probe_logits, alpha), axis=1)
+                row = score_row(context, backbone, "wise_ft", selection, c, predictions)
+                row["alpha"] = alpha
+                main_rows.append(row)
 
     if len(main_rows) == 0:
         raise SystemExit("no embeddings found; run scripts/embed.py first")
-    columns = (["dataset", "backbone", "method", "selection", "c"] + EVALUATION_SPLITS
-               + ["test_low", "test_high"])
-    table = pd.DataFrame(main_rows)[columns]
+    columns = (["dataset", "backbone", "method", "selection", "c", "alpha"]
+               + EVALUATION_SPLITS + ["test_low", "test_high"])
+    table = pd.DataFrame(main_rows).reindex(columns=columns)
     results_dir = config.path("results_dir")
     table.to_csv(results_dir / (args.dataset + "_main.csv"), index=False,
                  float_format="%.4f")
     pd.DataFrame(sweep_rows).to_csv(results_dir / (args.dataset + "_probe_sweep.csv"),
                                     index=False, float_format="%.4f")
+    if len(wise_rows) > 0:
+        pd.DataFrame(wise_rows).to_csv(results_dir / (args.dataset + "_wise_ft_sweep.csv"),
+                                       index=False, float_format="%.4f")
     pd.DataFrame(context["domain_rows"]).to_csv(
         results_dir / (args.dataset + "_per_domain.csv"), index=False, float_format="%.4f")
     print(table.to_string(index=False, float_format=format_score))

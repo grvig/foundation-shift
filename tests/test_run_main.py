@@ -22,6 +22,7 @@ from src.embeddings.store import fingerprint
 from src.embeddings.store import save_array
 from src.embeddings.store import store_dir
 from src.embeddings.store import write_manifest
+from src.methods.zero_shot import TextHead
 from src.models.backbones import backbone_settings
 
 
@@ -46,7 +47,7 @@ def setup(tmp_path, monkeypatch):
     values["paths"]["figures_dir"] = str(tmp_path / "figures")
     values["linear_probe"]["c_grid"] = [0.1, 1.0]
     config_path = tmp_path / "config.yaml"
-    config_path.write_text(yaml.safe_dump(values), encoding="utf-8")
+    config_path.write_text(yaml.safe_dump(values, sort_keys=False), encoding="utf-8")
 
     config = load_config(config_path)
     make_metadata(tmp_path / "data" / "camelyon17_v1.0", rng)
@@ -55,13 +56,25 @@ def setup(tmp_path, monkeypatch):
     # Embeddings that carry the label in their first coordinate, so the probe can learn it.
     features = rng.normal(size=(len(paths), 16))
     features[:, 0] = features[:, 0] + 4.0 * (2 * metadata["label"].to_numpy() - 1)
-    directory = store_dir(config.data_root(), "camelyon17", "resnet50")
-    directory.mkdir(parents=True)
-    save_array(directory / FINAL, features.astype(np.float16))
-    write_manifest(directory, {"fingerprint": fingerprint(
-        paths, backbone_settings(config, "resnet50")), "rows": len(paths),
-        "dimension": 16, "shard_size": 1000, "complete": True})
+    for backbone in ["resnet50", "clip_b16"]:
+        directory = store_dir(config.data_root(), "camelyon17", backbone)
+        directory.mkdir(parents=True)
+        save_array(directory / FINAL, features.astype(np.float16))
+        write_manifest(directory, {"fingerprint": fingerprint(
+            paths, backbone_settings(config, backbone)), "rows": len(paths),
+            "dimension": 16, "shard_size": 1000, "complete": True})
+    # A text head that points class 1 along the label axis, standing in for CLIP's.
+    vectors = np.zeros((2, 16))
+    vectors[0, 0] = -1.0
+    vectors[1, 0] = 1.0
+    monkeypatch.setattr(run_main, "load_text_head", fake_text_head(vectors))
     return config_path, tmp_path / "results"
+
+
+def fake_text_head(vectors):
+    def load(config, backbone, dataset, device):
+        return TextHead(vectors, 100.0, 0.0)
+    return load
 
 
 def test_the_main_table_has_both_selection_rules(setup, monkeypatch):
@@ -70,20 +83,27 @@ def test_the_main_table_has_both_selection_rules(setup, monkeypatch):
                                       str(config_path)])
     run_main.main()
     table = pd.read_csv(results / "camelyon17_main.csv")
-    assert list(table["backbone"]) == ["resnet50", "resnet50"]
-    assert list(table["selection"]) == ["ood_val", "id_val"]
+    assert list(table["backbone"]) == ["resnet50"] * 2 + ["clip_b16"] * 5
+    assert list(table["method"]) == ["linear_probe"] * 4 + ["zero_shot"] + ["wise_ft"] * 2
+    assert list(table["selection"]) == ["ood_val", "id_val"] * 2 + ["none"] + ["ood_val",
+                                                                            "id_val"]
     assert (table["test"] > 0.9).all()
+    wise = table[table["method"] == "wise_ft"]
+    assert wise["alpha"].between(0.0, 1.0).all()
+    sweep = pd.read_csv(results / "camelyon17_wise_ft_sweep.csv")
+    assert len(sweep) == 2 * 11
     assert (table["test_low"] <= table["test"]).all()
     assert (table["test"] <= table["test_high"]).all()
     saved = results.parent / "data" / "predictions" / "camelyon17"
     assert (saved / "resnet50_linear_probe_ood_val.npy").exists()
     domains = pd.read_csv(results / "camelyon17_per_domain.csv")
-    id_rows = domains[(domains["split"] == "id_val") & (domains["selection"] == "ood_val")]
+    id_rows = domains[(domains["split"] == "id_val") & (domains["selection"] == "ood_val")
+                     & (domains["backbone"] == "resnet50")]
     assert sorted(id_rows["domain"]) == [0, 3, 4]
     test_rows = domains[domains["split"] == "test"]
     assert set(test_rows["domain"]) == {2}
     sweep = pd.read_csv(results / "camelyon17_probe_sweep.csv")
-    assert list(sweep["c"]) == [0.1, 1.0]
+    assert list(sweep["c"]) == [0.1, 1.0] * 2
 
 
 def test_backbones_without_embeddings_are_skipped(setup, monkeypatch, capsys):
@@ -91,4 +111,4 @@ def test_backbones_without_embeddings_are_skipped(setup, monkeypatch, capsys):
     monkeypatch.setattr(sys, "argv", ["run_main.py", "camelyon17", "--config",
                                       str(config_path)])
     run_main.main()
-    assert "skipping clip_b16" in capsys.readouterr().out
+    assert "skipping siglip_b16" in capsys.readouterr().out

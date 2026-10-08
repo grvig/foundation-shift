@@ -20,7 +20,8 @@ import pandas as pd
 from src.config import load_config
 from src.plots.figures import BACKBONE_LABELS
 
-METHOD_LABELS = {"linear_probe": "linear probe", "zero_shot": "zero-shot"}
+METHOD_LABELS = {"linear_probe": "linear probe", "zero_shot": "zero-shot",
+                 "wise_ft": "WiSE-FT", "finetune_last2": "fine-tune last 2 blocks"}
 SELECTION_LABELS = {"ood_val": "C on new-hospital val", "id_val": "C on familiar val",
                     "none": ""}
 
