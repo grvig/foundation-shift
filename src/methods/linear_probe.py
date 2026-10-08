@@ -46,6 +46,17 @@ class LinearProbe:
             raise RuntimeError("fit the probe before predicting")
         return self.classifier.predict(self.scaler.transform(l2_normalise(features)))
 
+    def logits(self, features):
+        """One column per class. A binary model has a single decision value d, which is
+        the same classifier as logits (0, d)."""
+        if self.classifier is None:
+            raise RuntimeError("fit the probe before predicting")
+        decision = self.classifier.decision_function(
+            self.scaler.transform(l2_normalise(features)))
+        if decision.ndim == 1:
+            return np.stack([np.zeros_like(decision), decision], axis=1)
+        return decision
+
 
 def sweep(features, labels, splits, c_grid, metric_name, max_iter, seed, log=print):
     """Fit one probe per C on train; score each on every evaluation split.

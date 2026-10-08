@@ -39,8 +39,25 @@ def zero_shot_predict(image_features, text_embeddings):
     return np.argmax(zero_shot_scores(image_features, text_embeddings), axis=1)
 
 
-def load_text_side(config, backbone, dataset, device):
-    """The class vectors for one backbone and dataset, computed from the config prompts."""
+class TextHead:
+    """A zero-shot classifier: class vectors plus the model's learned logit scale and bias.
+
+    Predictions only need the class vectors (scale and bias do not change the argmax),
+    but blending with another classifier's logits, as WiSE-FT does, needs the logits at
+    the scale the model was trained to produce. SigLIP also learns a bias; CLIP has none.
+    """
+
+    def __init__(self, vectors, scale, bias):
+        self.vectors = vectors
+        self.scale = float(scale)
+        self.bias = float(bias)
+
+    def logits(self, image_features):
+        return self.scale * zero_shot_scores(image_features, self.vectors) + self.bias
+
+
+def load_text_head(config, backbone, dataset, device):
+    """The zero-shot classifier for one backbone and dataset, from the config prompts."""
     import open_clip
 
     from src.models.backbones import backbone_settings
@@ -52,5 +69,15 @@ def load_text_side(config, backbone, dataset, device):
     model = open_clip.create_model(settings["name"], pretrained=settings["pretrained"])
     model.eval().to(device)
     tokenizer = open_clip.get_tokenizer(settings["name"])
-    return class_text_embeddings(model.encode_text, tokenizer, prompts["classes"],
-                                 prompts["templates"], device)
+    vectors = class_text_embeddings(model.encode_text, tokenizer, prompts["classes"],
+                                    prompts["templates"], device)
+    scale = float(model.logit_scale.exp().item())
+    bias = 0.0
+    if getattr(model, "logit_bias", None) is not None:
+        bias = float(model.logit_bias.item())
+    return TextHead(vectors, scale, bias)
+
+
+def load_text_side(config, backbone, dataset, device):
+    """Only the class vectors, which is all a zero-shot prediction needs."""
+    return load_text_head(config, backbone, dataset, device).vectors
