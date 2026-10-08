@@ -58,7 +58,13 @@ Then fetch and verify the data (about 15 minutes on a fast connection) and embed
 ```
 python scripts/prepare_data.py camelyon17
 python scripts/embed.py camelyon17 all
+python scripts/prepare_data.py iwildcam
+python scripts/embed.py iwildcam all
 ```
+
+iWildCam has no mirror, so its roughly 200,000 images are fetched one file at a time from
+the official bundle, in parallel. Rerunning after an interruption fetches only what is
+missing.
 
 Labels, hospitals and splits come from the official WILDS metadata. The images come from
 a pinned copy on Hugging Face, because the official bundle only downloads as a single

@@ -1,6 +1,11 @@
 """Prepare a dataset: official metadata, mirror images, verification.
 
     python scripts/prepare_data.py camelyon17
+    python scripts/prepare_data.py iwildcam
+
+A dataset with a ``mirror_repo`` in the config (Camelyon17) goes through the steps below.
+One without (iWildCam) downloads its metadata and then every image straight from the
+official bundle, in parallel and resumably (see src/data/fetch.py).
 
 1. Downloads the official ``metadata.csv`` from the WILDS bundle.
 2. Downloads the mirror's parquet files at the pinned revision (resumable, and files
@@ -20,6 +25,7 @@ import io
 import os
 import shutil
 import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -33,6 +39,8 @@ from PIL import Image
 from src.config import load_config
 from src.data.camelyon17 import METADATA_FILE
 from src.data.datasets import load_metadata
+from src.data.fetch import fetch_files
+from src.data.iwildcam import CATEGORIES_FILE
 from src.data.mirror import write_images
 
 
@@ -74,6 +82,21 @@ def spot_check(settings, metadata, dataset_dir, count, seed):
             print("  " + str(number + 1) + " images identical to the official files")
 
 
+def prepare_from_bundle(settings, metadata, dataset_dir):
+    """Datasets without a mirror: every image straight from the official bundle."""
+    categories = dataset_dir / CATEGORIES_FILE
+    if not categories.exists():
+        try:
+            categories.write_bytes(fetch_official_file(settings["bundle_url"],
+                                                       CATEGORIES_FILE))
+        except urllib.error.HTTPError:
+            print("the bundle has no " + CATEGORIES_FILE + "; species will be numbered")
+    print("fetching every image from the official bundle")
+    fetch_files(settings["bundle_url"], list(metadata["path"]), dataset_dir,
+                int(settings["fetch_workers"]))
+    print("dataset ready at " + str(dataset_dir))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Download and verify a WILDS dataset.")
     parser.add_argument("dataset")
@@ -92,6 +115,10 @@ def main():
         metadata_path.write_bytes(fetch_official_file(settings["bundle_url"], METADATA_FILE))
     metadata = load_metadata(config, args.dataset)
     print(str(len(metadata)) + " official rows")
+
+    if "mirror_repo" not in settings:
+        prepare_from_bundle(settings, metadata, dataset_dir)
+        return
 
     mirror_dir = config.data_root() / "mirror" / args.dataset
     print("fetching the mirror at revision " + settings["mirror_revision"][:12])
