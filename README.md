@@ -66,7 +66,7 @@ Numbers below are from `results/camelyon17_*.csv`. Differences are in test accur
    honest width of the evidence.
 3. **Foundation models pull ahead once they are allowed to adapt.** Fine-tuning only the
    last two blocks, for one epoch on 60,000 of the 302,000 training patches, gives
-   DINOv2 95.6, CLIP 94.9, SigLIP 94.1 and ResNet-50 91.7. Against the fine-tuned
+   DINOv2 95.6, CLIP 94.9, SigLIP 94.0 and ResNet-50 91.6. Against the fine-tuned
    ResNet-50, DINOv2 is +3.9 (+2.8 to +6.2) and CLIP +3.2 (+1.4 to +5.0), both clear of
    zero; SigLIP is +2.4 (-0.3 to +5.1). The same fine-tuning gains ResNet-50 itself only
    +2.9 over its probe (-0.3 to +8.0). What the large pretraining buys is features that
