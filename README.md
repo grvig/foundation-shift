@@ -44,6 +44,10 @@ columns reflects images that look different, not a different mix of cases.
 | SigLIP ViT-B/16 | WiSE-FT (C on familiar val) | 96.7 | 91.8 | **87.8** | 80.3 - 92.1 |
 | DINOv2 ViT-B/14 | linear probe (C on new-hospital val) | 97.1 | 92.1 | **91.7** | 89.3 - 95.2 |
 | DINOv2 ViT-B/14 | linear probe (C on familiar val) | 97.1 | 92.1 | **91.7** | 89.3 - 95.2 |
+| ResNet-50 (ImageNet) | fine-tune last 2 blocks | 96.9 | 90.4 | **91.6** | 88.0 - 93.5 |
+| CLIP ViT-B/16 | fine-tune last 2 blocks | 97.4 | 93.0 | **94.9** | 91.7 - 96.8 |
+| SigLIP ViT-B/16 | fine-tune last 2 blocks | 97.5 | 93.2 | **94.0** | 90.7 - 96.0 |
+| DINOv2 ViT-B/14 | fine-tune last 2 blocks | 97.9 | 95.7 | **95.6** | 91.8 - 97.6 |
 <!-- /results:camelyon17 -->
 
 ### What the Camelyon17 results show
