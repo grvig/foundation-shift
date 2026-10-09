@@ -21,6 +21,9 @@ BACKBONE_COLOURS = {"resnet50": "#2a78d6", "clip_b16": "#eb6834",
                     "siglip_b16": "#1baf7a", "dinov2_b14": "#eda100"}
 BACKBONE_LABELS = {"resnet50": "ResNet-50 (ImageNet)", "clip_b16": "CLIP ViT-B/16",
                    "siglip_b16": "SigLIP ViT-B/16", "dinov2_b14": "DINOv2 ViT-B/14"}
+METHOD_SHORT = {"linear_probe": "probe", "zero_shot": "zero-shot", "wise_ft": "WiSE-FT",
+                "finetune_last2": "fine-tuned"}
+FINETUNE_METHOD = "finetune_last2"
 INK = "#0b0b0b"
 MUTED = "#52514e"
 GRID = "#e4e3df"
@@ -46,24 +49,30 @@ def ordered_backbones(names):
 
 def plot_main(table, path):
     """Per backbone: familiar-hospital accuracy, test-hospital accuracy with its slide
-    interval, and zero-shot test accuracy where the backbone has a text encoder."""
+    interval for the probe and (when present) the fine-tuned model, and zero-shot test
+    accuracy where the backbone has a text encoder."""
     probes = table[(table["method"] == "linear_probe") & (table["selection"] == "ood_val")]
+    tuned = table[table["method"] == FINETUNE_METHOD]
     backbones = ordered_backbones(probes["backbone"])
-    figure, axes = plt.subplots(figsize=(7.0, 0.6 * len(backbones) + 1.4))
+    figure, axes = plt.subplots(figsize=(7.0, 0.75 * len(backbones) + 1.6))
     for position, backbone in enumerate(backbones):
         y = len(backbones) - 1 - position
         colour = BACKBONE_COLOURS[backbone]
         row = probes[probes["backbone"] == backbone].iloc[0]
-        axes.plot([row["test"], row["id_val"]], [y, y], color=GRID, linewidth=2, zorder=1)
-        axes.errorbar(row["test"], y, xerr=[[row["test"] - row["test_low"]],
-                      [row["test_high"] - row["test"]]], fmt="o", color=colour,
-                      markersize=8, linewidth=2, capsize=0, zorder=3,
-                      markeredgecolor="white", markeredgewidth=1.5)
-        axes.plot(row["id_val"], y, "o", markersize=8, markerfacecolor="white",
+        probe_y = y
+        if len(tuned) > 0:
+            probe_y = y + 0.15
+        axes.plot([row["test"], row["id_val"]], [probe_y, probe_y], color=GRID, linewidth=2,
+                  zorder=1)
+        draw_interval(axes, row, probe_y, "o", colour)
+        axes.plot(row["id_val"], probe_y, "o", markersize=8, markerfacecolor="white",
                   markeredgecolor=colour, markeredgewidth=2, zorder=3)
+        tuned_row = tuned[tuned["backbone"] == backbone]
+        if len(tuned_row) > 0:
+            draw_interval(axes, tuned_row.iloc[0], y - 0.15, "s", colour)
         zero_shot = table[(table["backbone"] == backbone) & (table["method"] == "zero_shot")]
         if len(zero_shot) > 0:
-            axes.plot(zero_shot.iloc[0]["test"], y, "D", markersize=7, color=colour,
+            axes.plot(zero_shot.iloc[0]["test"], probe_y, "D", markersize=7, color=colour,
                       markeredgecolor="white", markeredgewidth=1.5, zorder=3)
     axes.set_yticks(range(len(backbones)))
     labels = []
@@ -79,10 +88,78 @@ def plot_main(table, path):
         plt.Line2D([], [], marker="o", linestyle="-", color=MUTED, markersize=8),
         plt.Line2D([], [], marker="D", linestyle="", color=MUTED, markersize=7),
     ]
-    axes.legend(handles, ["familiar hospitals", "new hospital, 95% interval",
-                          "zero-shot, new hospital"], loc="lower center",
-                bbox_to_anchor=(0.4, 1.0), ncol=3, frameon=False, fontsize=8,
-                handletextpad=0.3, columnspacing=1.0)
+    names = ["probe, familiar hospitals", "probe, new hospital (95% interval)",
+             "zero-shot, new hospital"]
+    if len(tuned) > 0:
+        handles.append(plt.Line2D([], [], marker="s", linestyle="-", color=MUTED,
+                                  markersize=7))
+        names.append("fine-tuned, new hospital (95% interval)")
+    axes.legend(handles, names, loc="lower center", bbox_to_anchor=(0.4, 1.0), ncol=2,
+                frameon=False, fontsize=8, handletextpad=0.3, columnspacing=1.0)
+    figure.tight_layout()
+    save(figure, path)
+
+
+def draw_interval(axes, row, y, marker, colour):
+    axes.errorbar(row["test"], y, xerr=[[row["test"] - row["test_low"]],
+                  [row["test_high"] - row["test"]]], fmt=marker, color=colour,
+                  markersize=8, linewidth=2, capsize=0, zorder=3,
+                  markeredgecolor="white", markeredgewidth=1.5)
+
+
+def short_label(backbone, method):
+    return BACKBONE_LABELS[backbone].split(" (")[0] + ", " + METHOD_SHORT.get(method, method)
+
+
+def parse_key(key):
+    """(backbone, method) from a key such as clip_b16_linear_probe_ood_val."""
+    for backbone in BACKBONE_LABELS:
+        if not key.startswith(backbone + "_"):
+            continue
+        rest = key[len(backbone) + 1:]
+        for method in METHOD_SHORT:
+            if rest.startswith(method + "_"):
+                return backbone, method
+    raise ValueError("cannot read a backbone and method from " + key)
+
+
+def plot_paired(paired, path):
+    """Forest plot: each method's test accuracy minus its reference's, with the paired
+    slide interval. One panel per reference. Zero-shot rows are left out because their
+    50-point deficits would squeeze every other interval into a sliver; they are in the
+    CSV."""
+    paired = paired[(paired["method"] != "zero_shot") & (paired["selection"] != "id_val")]
+    references = list(dict.fromkeys(paired["reference"]))
+    heights = []
+    for reference in references:
+        heights.append(max(len(paired[paired["reference"] == reference]), 1))
+    figure, panels = plt.subplots(len(references), 1, squeeze=False,
+                                  figsize=(6.4, 0.32 * sum(heights) + 1.2 * len(references)),
+                                  gridspec_kw={"height_ratios": heights})
+    for panel, reference in zip(panels[:, 0], references):
+        rows = paired[paired["reference"] == reference].reset_index(drop=True)
+        labels = []
+        for position, row in rows.iterrows():
+            y = len(rows) - 1 - position
+            colour = BACKBONE_COLOURS.get(row["backbone"], MUTED)
+            marker = "o"
+            if row["method"] == FINETUNE_METHOD:
+                marker = "s"
+            panel.errorbar(100 * row["difference"], y,
+                           xerr=[[100 * (row["difference"] - row["low"])],
+                                 [100 * (row["high"] - row["difference"])]],
+                           fmt=marker, color=colour, markersize=7, linewidth=2, capsize=0,
+                           markeredgecolor="white", markeredgewidth=1.2)
+            labels.append(short_label(row["backbone"], row["method"]))
+        panel.axvline(0, color=INK, linewidth=1)
+        panel.set_yticks(range(len(rows)))
+        panel.set_yticklabels(list(reversed(labels)), fontsize=8)
+        reference_backbone, reference_method = parse_key(reference)
+        panel.set_title("against " + short_label(reference_backbone, reference_method),
+                        fontsize=9, color=MUTED, loc="left")
+        style(panel)
+        panel.grid(False, axis="y")
+    panels[-1, 0].set_xlabel("test accuracy difference, percentage points")
     figure.tight_layout()
     save(figure, path)
 

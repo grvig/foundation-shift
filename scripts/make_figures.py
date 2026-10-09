@@ -18,6 +18,7 @@ import pandas as pd
 from src.config import load_config
 from src.plots.figures import plot_main
 from src.plots.figures import plot_on_the_line
+from src.plots.figures import plot_paired
 
 
 def main():
@@ -30,8 +31,14 @@ def main():
     config.ensure_output_dirs()
     results = config.path("results_dir")
     figures = config.path("figures_dir")
-    plot_main(pd.read_csv(results / (args.dataset + "_main.csv")),
-              figures / (args.dataset + "_main"))
+    main_table = pd.read_csv(results / (args.dataset + "_main.csv"))
+    finetune_path = results / (args.dataset + "_finetune.csv")
+    if finetune_path.exists():
+        main_table = pd.concat([main_table, pd.read_csv(finetune_path)], ignore_index=True)
+    plot_main(main_table, figures / (args.dataset + "_main"))
+    paired_path = results / (args.dataset + "_paired.csv")
+    if paired_path.exists():
+        plot_paired(pd.read_csv(paired_path), figures / (args.dataset + "_paired"))
     line_path = results / (args.dataset + "_on_the_line.csv")
     if line_path.exists():
         fit = pd.read_csv(results / (args.dataset + "_on_the_line_fit.csv")).iloc[0]
