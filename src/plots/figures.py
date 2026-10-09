@@ -208,6 +208,38 @@ def plot_on_the_line(points, fit, path):
     save(figure, path)
 
 
+def plot_blocks(summary, path):
+    """Test accuracy (with slide interval) against the number of fine-tuned blocks, one
+    line per backbone, and in-distribution accuracy as hollow markers for reference."""
+    figure, axes = plt.subplots(figsize=(5.6, 4.0))
+    backbones = ordered_backbones(summary["backbone"].unique())
+    offsets = {}
+    for position, backbone in enumerate(backbones):
+        offsets[backbone] = (position - (len(backbones) - 1) / 2.0) * 0.06
+    for backbone in backbones:
+        rows = summary[summary["backbone"] == backbone].sort_values("blocks")
+        colour = BACKBONE_COLOURS[backbone]
+        x = np.log2(rows["blocks"].to_numpy()) + offsets[backbone]
+        axes.plot(x, rows["test"], color=colour, linewidth=2, label=BACKBONE_LABELS[backbone])
+        axes.errorbar(x, rows["test"], yerr=[rows["test"] - rows["test_low"],
+                                             rows["test_high"] - rows["test"]],
+                      fmt="s", color=colour, markersize=7, linewidth=1.5, capsize=0,
+                      markeredgecolor="white", markeredgewidth=1.2)
+        axes.plot(x, rows["id_val"], "o", markersize=6, markerfacecolor="white",
+                  markeredgecolor=colour, markeredgewidth=1.5)
+    blocks = sorted(summary["blocks"].unique())
+    axes.set_xticks(np.log2(blocks))
+    axes.set_xticklabels([str(int(b)) for b in blocks])
+    axes.set_xlabel("final blocks fine-tuned")
+    axes.set_ylabel("accuracy")
+    axes.set_title("squares: new hospital (95% interval)   circles: familiar hospitals",
+                   fontsize=8, color=MUTED)
+    style(axes)
+    axes.legend(frameon=False, fontsize=8, loc="lower right")
+    figure.tight_layout()
+    save(figure, path)
+
+
 def save(figure, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(path.with_suffix(".pdf"))
