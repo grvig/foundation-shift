@@ -26,6 +26,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+app = ["streamlit>=1.40"]
 
 [tool.setuptools]
 packages = ["src", "src.data", "src.evaluation", "src.models", "src.embeddings", "src.methods", "src.plots"]

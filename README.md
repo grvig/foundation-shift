@@ -95,6 +95,19 @@ python scripts/run_all.py camelyon17
 Fine-tuned rows come from `python scripts/run_finetune.py camelyon17 <backbone>`, about
 twenty minutes per backbone on a laptop GPU.
 
+## Demo app
+
+```
+pip install streamlit
+python -m streamlit run app/Home.py
+```
+
+Three pages. **Browse patches** shows real tissue patches from any hospital with two
+chosen methods' answers, filtered to where they disagree, plus accuracy slide by slide.
+**Results** shows the tables and figures, read from `results/` and `figures/`. **About**
+explains the protocol in plain words. The app only reads saved predictions; it never runs
+a model, so it starts in under a minute on a laptop.
+
 ## Setup
 
 ```

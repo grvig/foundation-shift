@@ -16,3 +16,5 @@ timm>=1.0
 open_clip_torch>=2.26
 # SigLIP's text tokenizer comes from here.
 transformers>=4.40
+# Demo app only; the experiments do not need it.
+streamlit>=1.40
