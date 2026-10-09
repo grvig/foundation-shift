@@ -96,10 +96,18 @@ Numbers below are from `results/camelyon17_*.csv`. Differences are in test accur
    (`camelyon17_per_slide.csv`).
    85,054 test patches are much less evidence than the number suggests, which is why
    every interval here resamples slides.
+10. **Adapting more of ResNet-50 only fits the familiar hospitals better.** Fine-tuning
+    one, two or four final blocks (`camelyon17_blocks_summary.csv`, seed 0) raises every
+    model's familiar-hospital accuracy, ResNet-50's from 95.7 to 97.8, but ResNet-50's
+    test accuracy stays at 91.2 to 91.6. CLIP and SigLIP gain about two points on the
+    test hospital going from one block to two (CLIP 92.8 to 95.0, SigLIP 92.7 to 95.1)
+    and little more from four; DINOv2 is already at 96.1 with one block. These are single
+    runs, and the seed repeats move test accuracy by about a point, so only the one-to-two
+    block step for CLIP and SigLIP is larger than that noise.
 
 Figures: `figures/camelyon17_main` (every backbone and method against the familiar
-hospitals), `camelyon17_paired` (the paired differences behind points 2 and 3) and
-`camelyon17_on_the_line` (point 7).
+hospitals), `camelyon17_paired` (the paired differences behind points 2 and 3),
+`camelyon17_on_the_line` (point 7) and `camelyon17_blocks` (point 10).
 
 The table, the CSVs in `results/` and the figures in `figures/` are all regenerated from
 the cached embeddings by one command, which runs each analysis script in turn:

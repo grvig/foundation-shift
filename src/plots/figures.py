@@ -235,7 +235,9 @@ def plot_blocks(summary, path):
     axes.set_title("squares: new hospital (95% interval)   circles: familiar hospitals",
                    fontsize=8, color=MUTED)
     style(axes)
-    axes.legend(frameon=False, fontsize=8, loc="lower right")
+    # Below the axes: inside them it covered the lower ends of the intervals.
+    axes.legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.16),
+                ncol=2)
     figure.tight_layout()
     save(figure, path)
 
