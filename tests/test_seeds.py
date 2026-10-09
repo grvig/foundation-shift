@@ -12,8 +12,16 @@ from run_finetune import replace_row
 from summarise_seeds import summarise
 
 
-def row(backbone, seed, test):
-    return {"backbone": backbone, "seed": seed, "id_val": 0.9, "ood_val": 0.8, "test": test}
+def row(backbone, seed, test, method="finetune_last2"):
+    return {"backbone": backbone, "method": method, "seed": seed, "id_val": 0.9,
+            "ood_val": 0.8, "test": test}
+
+
+def test_a_different_block_count_does_not_replace_the_main_run(tmp_path):
+    path = tmp_path / "blocks.csv"
+    replace_row(path, row("clip_b16", 0, 0.90))
+    replace_row(path, row("clip_b16", 0, 0.93, method="finetune_last4"))
+    assert sorted(pd.read_csv(path)["method"]) == ["finetune_last2", "finetune_last4"]
 
 
 def test_a_rerun_replaces_only_its_own_backbone_and_seed(tmp_path):
@@ -30,7 +38,8 @@ def test_a_rerun_replaces_only_its_own_backbone_and_seed(tmp_path):
 
 def test_files_from_before_seeds_existed_count_as_seed_zero(tmp_path):
     path = tmp_path / "old.csv"
-    pd.DataFrame([{"backbone": "clip_b16", "test": 0.9}]).to_csv(path, index=False)
+    pd.DataFrame([{"backbone": "clip_b16", "method": "finetune_last2",
+                   "test": 0.9}]).to_csv(path, index=False)
     replace_row(path, row("clip_b16", 0, 0.95))
     assert list(pd.read_csv(path)["test"]) == [0.95]
 

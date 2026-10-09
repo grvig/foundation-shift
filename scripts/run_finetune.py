@@ -12,6 +12,9 @@ predictions where run_compare.py can find them.
 initialisation. Every seed is recorded in results/<dataset>_finetune_seeds.csv; seed 0 is
 also the row the main tables use.
 
+``--blocks N`` trains the last N blocks instead of the configured number, as an ablation;
+those rows go to results/<dataset>_finetune_blocks.csv and never touch the main tables.
+
 ``--quick`` trains on 512 images and evaluates 512 per split, writing to a separate
 ``_quick`` file, to check a backbone end to end before the real run.
 """
@@ -69,12 +72,19 @@ def main():
     parser.add_argument("--quick", action="store_true")
     parser.add_argument("--seed", type=int, default=0,
                         help="added to the config seed; 0 is the run reported in the tables")
+    parser.add_argument("--blocks", type=int, default=0,
+                        help="train this many final blocks instead of the configured number")
     parser.add_argument("--config", default=None)
     args = parser.parse_args()
 
     config = load_config(args.config)
     config.ensure_output_dirs()
     settings = dict(config.section("fine_tuning"))
+    # A different block count is an ablation: its rows go to their own file so they can
+    # never replace the configured runs the main tables are built from.
+    ablation = args.blocks > 0 and args.blocks != int(settings["trainable_blocks"])
+    if args.blocks > 0:
+        settings["trainable_blocks"] = args.blocks
     dataset_settings = config.dataset(args.dataset)
     metadata = load_metadata(config, args.dataset)
     labels = metadata["label"].to_numpy()
@@ -148,22 +158,27 @@ def main():
         if args.seed != 0:
             key = args.backbone + "_" + method + "_seed" + str(args.seed)
         np.save(directory / (key + ".npy"), predictions)
-    # Every seed goes into the seeds file; seed 0 is also the run the main tables use.
-    replace_row(results / (args.dataset + "_finetune_seeds" + suffix + ".csv"), row)
-    if args.seed == 0:
-        replace_row(results / (args.dataset + "_finetune" + suffix + ".csv"), row)
+    if ablation:
+        replace_row(results / (args.dataset + "_finetune_blocks" + suffix + ".csv"), row)
+    else:
+        # Every seed goes into the seeds file; seed 0 is also the run the main tables use.
+        replace_row(results / (args.dataset + "_finetune_seeds" + suffix + ".csv"), row)
+        if args.seed == 0:
+            replace_row(results / (args.dataset + "_finetune" + suffix + ".csv"), row)
     print(pd.DataFrame([row]).to_string(index=False))
 
 
 def replace_row(path, row):
-    """Write ``row`` into the CSV, replacing any earlier row for the same backbone and seed."""
+    """Write ``row`` into the CSV, replacing any earlier row for the same backbone, method
+    and seed."""
     table = pd.DataFrame([row])
     if path.exists():
         previous = pd.read_csv(path)
         if "seed" not in previous.columns:
             previous["seed"] = 0
-        keep = (previous["backbone"] != row["backbone"]) | (previous["seed"] != row["seed"])
-        table = pd.concat([previous[keep], table], ignore_index=True)
+        same = ((previous["backbone"] == row["backbone"])
+                & (previous["method"] == row["method"]) & (previous["seed"] == row["seed"]))
+        table = pd.concat([previous[~same], table], ignore_index=True)
     table.to_csv(path, index=False, float_format="%.4f")
 
 
