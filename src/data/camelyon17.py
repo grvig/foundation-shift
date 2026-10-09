@@ -50,29 +50,28 @@ def load_metadata(dataset_dir, val_center, test_center):
 
 
 def assign_splits(frame, val_center, test_center):
-    names = []
-    for center, code in zip(frame["center"], frame["split"]):
-        if int(center) == int(val_center):
-            names.append("ood_val")
-            continue
-        if int(center) == int(test_center):
-            names.append("test")
-            continue
-        if int(code) not in FILE_SPLIT_NAMES:
-            raise ValueError("unexpected split code in metadata: " + str(code))
-        names.append(FILE_SPLIT_NAMES[int(code)])
-    return names
+    codes = frame["split"].astype(int)
+    unknown = sorted(set(codes.unique()) - set(FILE_SPLIT_NAMES.keys()))
+    if len(unknown) > 0:
+        raise ValueError("unexpected split code in metadata: " + str(unknown[0]))
+    names = codes.map(FILE_SPLIT_NAMES).to_numpy(dtype=object)
+    centers = frame["center"].astype(int).to_numpy()
+    names[centers == int(val_center)] = "ood_val"
+    names[centers == int(test_center)] = "test"
+    return list(names)
 
 
 def image_paths(frame):
-    """Relative path of every patch, in the layout the WILDS archive uses."""
-    paths = []
-    for _, row in frame.iterrows():
-        stem = "patient_" + str(row["patient"]) + "_node_" + str(int(row["node"]))
-        name = ("patch_" + stem + "_x_" + str(int(row["x_coord"]))
-                + "_y_" + str(int(row["y_coord"])) + ".png")
-        paths.append("patches/" + stem + "/" + name)
-    return paths
+    """Relative path of every patch, in the layout the WILDS archive uses.
+
+    Built with whole-column string operations: a row-by-row loop took most of a minute
+    on 456k rows, and every script and the app load this table.
+    """
+    stem = ("patient_" + frame["patient"].astype(str) + "_node_"
+            + frame["node"].astype(int).astype(str))
+    name = ("patch_" + stem + "_x_" + frame["x_coord"].astype(int).astype(str) + "_y_"
+            + frame["y_coord"].astype(int).astype(str) + ".png")
+    return list("patches/" + stem + "/" + name)
 
 
 MIRROR_FIELDS = [("patient", "patient"), ("node", "node"), ("x_coord", "x_coord"),
