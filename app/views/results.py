@@ -62,6 +62,11 @@ if paired is not None:
                      + format(100.0 * row["high"], "+.1f"),
                      "verdict": verdict})
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    forest = figures / "camelyon17_paired.png"
+    if forest.exists():
+        st.image(str(forest), width=700)
+        st.caption("Zero-shot rows are left out of the plot; their 30 to 40 point deficits "
+                   "would squeeze every other interval. They are in the table above.")
 
 seeds = shared.read_result("finetune_seed_summary")
 if seeds is not None:
@@ -79,3 +84,23 @@ if seeds is not None:
                      "sd": spread, "lowest": shared.percent(row["test_min"]),
                      "highest": shared.percent(row["test_max"])})
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+
+blocks = shared.read_result("blocks_summary")
+if blocks is not None:
+    st.subheader("How much of the model to fine-tune")
+    st.write("The same fine-tuning with one, two or four final blocks trainable, one run "
+             "each. Compare the gains with the seed spread above before reading much into "
+             "them.")
+    rows = []
+    for _, row in blocks.iterrows():
+        rows.append({"backbone": shared.BACKBONE_LABELS[row["backbone"]],
+                     "blocks": int(row["blocks"]),
+                     "familiar hospitals": shared.percent(row["id_val"]),
+                     "test hospital": shared.percent(row["test"]),
+                     "test interval": shared.percent(row["test_low"]) + " to "
+                     + shared.percent(row["test_high"])})
+    columns = st.columns([3, 2])
+    columns[0].dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    path = figures / "camelyon17_blocks.png"
+    if path.exists():
+        columns[1].image(str(path), use_container_width=True)
