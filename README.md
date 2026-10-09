@@ -44,10 +44,10 @@ columns reflects images that look different, not a different mix of cases.
 | SigLIP ViT-B/16 | WiSE-FT (C on familiar val) | 96.7 | 91.8 | **87.8** | 80.3 - 92.1 |
 | DINOv2 ViT-B/14 | linear probe (C on new-hospital val) | 97.1 | 92.1 | **91.7** | 89.3 - 95.2 |
 | DINOv2 ViT-B/14 | linear probe (C on familiar val) | 97.1 | 92.1 | **91.7** | 89.3 - 95.2 |
-| ResNet-50 (ImageNet) | fine-tune last 2 blocks | 96.9 | 90.4 | **91.6** | 88.0 - 93.5 |
-| CLIP ViT-B/16 | fine-tune last 2 blocks | 97.4 | 93.0 | **94.9** | 91.7 - 96.8 |
-| SigLIP ViT-B/16 | fine-tune last 2 blocks | 97.5 | 93.2 | **94.0** | 90.7 - 96.0 |
-| DINOv2 ViT-B/14 | fine-tune last 2 blocks | 97.9 | 95.7 | **95.6** | 91.8 - 97.6 |
+| ResNet-50 (ImageNet) | fine-tune last 2 blocks | 96.9 | 90.0 | **91.6** | 87.9 - 93.5 |
+| CLIP ViT-B/16 | fine-tune last 2 blocks | 97.2 | 92.0 | **95.0** | 92.2 - 96.7 |
+| SigLIP ViT-B/16 | fine-tune last 2 blocks | 97.6 | 93.6 | **95.1** | 93.0 - 96.6 |
+| DINOv2 ViT-B/14 | fine-tune last 2 blocks | 98.0 | 95.7 | **95.7** | 91.5 - 97.7 |
 <!-- /results:camelyon17 -->
 
 ### What the Camelyon17 results show
@@ -66,24 +66,40 @@ Numbers below are from `results/camelyon17_*.csv`. Differences are in test accur
    honest width of the evidence.
 3. **Foundation models pull ahead once they are allowed to adapt.** Fine-tuning only the
    last two blocks, for one epoch on 60,000 of the 302,000 training patches, gives
-   DINOv2 95.6, CLIP 94.9, SigLIP 94.0 and ResNet-50 91.6. Against the fine-tuned
-   ResNet-50, DINOv2 is +3.9 (+2.8 to +6.2) and CLIP +3.2 (+1.4 to +5.0), both clear of
-   zero; SigLIP is +2.4 (-0.3 to +5.1). The same fine-tuning gains ResNet-50 itself only
-   +2.9 over its probe (-0.3 to +8.0). What the large pretraining buys is features that
-   adapt well, not features that are already robust.
-4. **Zero-shot classification does not work on pathology.** CLIP reaches 60 percent and
+   DINOv2 95.7, SigLIP 95.1, CLIP 95.0 and ResNet-50 91.6. Against the fine-tuned
+   ResNet-50 all three are clear of zero: DINOv2 +4.1 (+3.2 to +5.3), SigLIP +3.5
+   (+1.3 to +6.1) and CLIP +3.4 (+1.6 to +5.0). The same fine-tuning gains ResNet-50
+   itself only +2.9 over its probe (-0.7 to +8.8). What the large pretraining buys is
+   features that adapt well, not features that are already robust.
+4. **That gap survives retraining; the order within it does not.** Each fine-tuning was
+   repeated with three seeds (a different training subset, batch order and starting
+   head; `camelyon17_finetune_seed_summary.csv`). Mean test accuracy is DINOv2 94.9,
+   SigLIP 94.7, CLIP 93.9 and ResNet-50 89.9, and the worst foundation-model run (93.3)
+   is above the best ResNet-50 run (91.6). Which foundation model comes first changes
+   from seed to seed, so the data supports "foundation models beat ResNet-50 after
+   fine-tuning", not a ranking among them.
+5. **Zero-shot classification does not work on pathology.** CLIP reaches 60 percent and
    SigLIP 50 percent, which is chance on a balanced task: SigLIP labels 99.9 percent of
    all patches as normal tissue. The web text these models learned from does not
    describe lymph node histology in a way the prompts can reach.
-5. **WiSE-FT adds nothing here.** The best blends give almost all the weight to the
+6. **WiSE-FT adds nothing here.** The best blends give almost all the weight to the
    trained probe (alpha 0.8 to 1.0) and change test accuracy by at most one point,
    because the zero-shot head it blends in is at chance.
-6. **In-distribution accuracy does not predict new-hospital accuracy.** Across all twenty
+7. **In-distribution accuracy does not predict new-hospital accuracy.** Across all twenty
    probe settings the correlation in probit space is 0.06. "Accuracy on the line" has
    nothing to work with when every model scores 96 to 97 percent on familiar data.
-7. **The two new hospitals disagree about which model is best.** Among the probes, SigLIP
-   is second-best on hospital 1 and worst on hospital 2; CLIP is the reverse. Choosing a model, or its
-   regularisation, on one unseen hospital is weak evidence about another.
+8. **The two new hospitals disagree about which model is best.** Among the probes, SigLIP
+   is second-best on hospital 1 and worst on hospital 2; CLIP is the reverse. Choosing a
+   model, or its regularisation, on one unseen hospital is weak evidence about another.
+9. **Errors cluster on a few slides.** For every probe, WiSE-FT and fine-tuned model, 35
+   to 64 percent of all test errors fall on just two of the ten test slides
+   (`camelyon17_per_slide.csv`).
+   85,054 test patches are much less evidence than the number suggests, which is why
+   every interval here resamples slides.
+
+Figures: `figures/camelyon17_main` (every backbone and method against the familiar
+hospitals), `camelyon17_paired` (the paired differences behind points 2 and 3) and
+`camelyon17_on_the_line` (point 7).
 
 The table, the CSVs in `results/` and the figures in `figures/` are all regenerated from
 the cached embeddings by one command, which runs each analysis script in turn:
