@@ -4,6 +4,17 @@ Testing whether large pretrained vision models (CLIP, SigLIP, DINOv2) stay accur
 deployed somewhere new - unseen camera traps and an unseen hospital - using the
 [WILDS](https://wilds.stanford.edu/) benchmark.
 
+## Headline (Camelyon17)
+
+Foundation models do not fix the hospital shift on their own: used as frozen features,
+CLIP, SigLIP and DINOv2 are not reliably better than an ImageNet ResNet-50 at an unseen
+hospital, and zero-shot classification is at chance. Once their last two blocks are
+fine-tuned, all three beat an equally fine-tuned ResNet-50 by 3 to 4 points, and across
+three training seeds every foundation-model run beats every ResNet-50 run. The evidence
+behind every claim is resampled at the level of tissue slides, because the test hospital
+contributes only ten of them. Details and caveats are under
+[What the Camelyon17 results show](#what-the-camelyon17-results-show).
+
 ## Question
 
 Pretrained vision models are often described as robust. WILDS measures robustness on real
