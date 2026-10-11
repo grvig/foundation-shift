@@ -1,0 +1,5 @@
+dataset,backbone,method,selection,c,id_val,ood_val,test,test_low,test_high,minutes,seed
+camelyon17,resnet50,finetune_last2_aug,none,,0.9656,0.9146,0.9354,0.8994,0.9542,10.4095,0
+camelyon17,clip_b16,finetune_last2_aug,none,,0.9720,0.9330,0.9552,0.9332,0.9697,19.6442,0
+camelyon17,siglip_b16,finetune_last2_aug,none,,0.9672,0.9346,0.9467,0.9129,0.9655,20.9524,0
+camelyon17,dinov2_b14,finetune_last2_aug,none,,0.9796,0.9585,0.9566,0.9213,0.9768,23.6658,0

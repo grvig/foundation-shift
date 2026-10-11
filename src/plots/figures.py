@@ -23,7 +23,7 @@ BACKBONE_LABELS = {"resnet50": "ResNet-50 (ImageNet)", "clip_b16": "CLIP ViT-B/1
                    "siglip_b16": "SigLIP ViT-B/16", "dinov2_b14": "DINOv2 ViT-B/14"}
 METHOD_SHORT = {"linear_probe": "probe", "zero_shot": "zero-shot", "wise_ft": "WiSE-FT",
                 "finetune_last2": "fine-tuned",
-                "finetune_last2_aug": "fine-tuned with stain augmentation",
+                "finetune_last2_aug": "fine-tuned + stain aug",
                 "probe_domain_norm": "probe, per-hospital standardisation"}
 WITHIN_TITLES = {
     "finetune_last2": "fine-tuning against the probe",
@@ -168,13 +168,16 @@ def plot_paired(paired, path):
     slide interval. One panel per reference. Zero-shot rows are left out because their
     50-point deficits would squeeze every other interval into a sliver; they are in the
     CSV."""
-    paired = paired[(paired["method"] != "zero_shot") & (paired["selection"] != "id_val")]
+    # Zero-shot and WiSE-FT rows stay in the CSV but not the plot: zero-shot deficits
+    # would squash the axis and WiSE-FT sits on top of the probe it blends.
+    paired = paired[~paired["method"].isin(["zero_shot", "wise_ft"])
+                    & (paired["selection"] != "id_val")]
     references = list(dict.fromkeys(paired["reference"]))
     heights = []
     for reference in references:
         heights.append(max(len(paired[paired["reference"] == reference]), 1))
     figure, panels = plt.subplots(len(references), 1, squeeze=False,
-                                  figsize=(6.4, 0.32 * sum(heights) + 1.2 * len(references)),
+                                  figsize=(7.0, 0.32 * sum(heights) + 1.2 * len(references)),
                                   gridspec_kw={"height_ratios": heights})
     for panel, reference in zip(panels[:, 0], references):
         rows = paired[paired["reference"] == reference].reset_index(drop=True)
@@ -183,7 +186,7 @@ def plot_paired(paired, path):
             y = len(rows) - 1 - position
             colour = BACKBONE_COLOURS.get(row["backbone"], MUTED)
             marker = "o"
-            if row["method"] == FINETUNE_METHOD:
+            if row["method"].startswith("finetune"):
                 marker = "s"
             panel.errorbar(100 * row["difference"], y,
                            xerr=[[100 * (row["difference"] - row["low"])],

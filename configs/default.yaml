@@ -137,6 +137,10 @@ comparison:
     - backbone: resnet50
       method: finetune_last2
       selection: none
+    # The strongest ResNet-50: is the foundation-model lead more than a cheap augmentation?
+    - backbone: resnet50
+      method: finetune_last2_aug
+      selection: none
   # Same-backbone questions: does fine-tuning beat the probe, does stain augmentation
   # beat plain fine-tuning, does per-hospital standardisation beat the plain probe.
   within:

@@ -1,0 +1,13 @@
+backbone,method,against,test,against_test,difference,low,high,significant
+resnet50,finetune_last2,linear_probe,0.9162,0.8875,0.0287,-0.0070,0.0878,False
+clip_b16,finetune_last2,linear_probe,0.9497,0.8971,0.0526,0.0201,0.0771,True
+siglip_b16,finetune_last2,linear_probe,0.9511,0.8740,0.0772,0.0432,0.1437,True
+dinov2_b14,finetune_last2,linear_probe,0.9573,0.9171,0.0402,-0.0027,0.0634,False
+resnet50,finetune_last2_aug,finetune_last2,0.9354,0.9162,0.0192,0.0074,0.0259,True
+clip_b16,finetune_last2_aug,finetune_last2,0.9552,0.9497,0.0055,0.0002,0.0164,True
+siglip_b16,finetune_last2_aug,finetune_last2,0.9467,0.9511,-0.0044,-0.0224,0.0056,False
+dinov2_b14,finetune_last2_aug,finetune_last2,0.9566,0.9573,-0.0007,-0.0067,0.0081,False
+resnet50,probe_domain_norm,linear_probe,0.9141,0.8875,0.0266,0.0093,0.0599,True
+clip_b16,probe_domain_norm,linear_probe,0.9009,0.8971,0.0037,-0.0453,0.0264,False
+siglip_b16,probe_domain_norm,linear_probe,0.9162,0.8740,0.0422,0.0157,0.0959,True
+dinov2_b14,probe_domain_norm,linear_probe,0.9185,0.9171,0.0015,-0.0479,0.0251,False

@@ -1,0 +1,9 @@
+dataset,backbone,method,selection,c,id_val,ood_val,test,test_low,test_high
+camelyon17,clip_b16,probe_domain_norm,ood_val,0.0100,0.9590,0.8829,0.9009,0.8615,0.9295
+camelyon17,clip_b16,probe_domain_norm,id_val,1.0000,0.9603,0.8774,0.8895,0.8448,0.9213
+camelyon17,siglip_b16,probe_domain_norm,ood_val,0.0100,0.9664,0.9185,0.9162,0.8805,0.9401
+camelyon17,siglip_b16,probe_domain_norm,id_val,1.0000,0.9672,0.9096,0.9039,0.8618,0.9306
+camelyon17,dinov2_b14,probe_domain_norm,ood_val,0.0100,0.9708,0.9187,0.9185,0.8823,0.9399
+camelyon17,dinov2_b14,probe_domain_norm,id_val,10.0000,0.9717,0.9152,0.9130,0.8741,0.9365
+camelyon17,resnet50,probe_domain_norm,ood_val,0.1000,0.9708,0.9071,0.9141,0.8769,0.9377
+camelyon17,resnet50,probe_domain_norm,id_val,0.0100,0.9708,0.9046,0.9195,0.8851,0.9417

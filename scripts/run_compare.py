@@ -23,7 +23,7 @@ from src.data.datasets import load_metadata
 from src.evaluation.compare import compare_to_reference
 from src.evaluation.compare import compare_within
 
-EXTRA_TABLES = ["finetune_aug", "domain_norm"]
+EXTRA_TABLES = ["domain_norm"]
 from src.evaluation.compare import method_key
 
 
@@ -54,6 +54,11 @@ def main():
     finetune_path = results_dir / (args.dataset + "_finetune.csv")
     if finetune_path.exists():
         table = pd.concat([table, pd.read_csv(finetune_path)], ignore_index=True)
+    # Reference comparisons cover the main methods plus the augmented fine-tuning, which
+    # can also serve as a reference; per-hospital probes are only compared within backbone.
+    augmented_path = results_dir / (args.dataset + "_finetune_aug.csv")
+    if augmented_path.exists():
+        table = pd.concat([table, pd.read_csv(augmented_path)], ignore_index=True)
     metadata = load_metadata(config, args.dataset)
     test = (metadata["split"] == "test").to_numpy()
     bootstrap = config.section("bootstrap")
