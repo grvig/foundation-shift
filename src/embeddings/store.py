@@ -78,8 +78,9 @@ def check_fingerprint(directory, expected):
         )
 
 
-def load_embeddings(data_root, dataset, backbone, paths, settings):
-    """The finished matrix for these exact image paths, as float32."""
+def load_embeddings(data_root, dataset, backbone, paths, settings, as_float32=True):
+    """The finished matrix for these exact image paths, as float32 unless asked to keep
+    the stored float16, which halves the memory for callers that work in place."""
     directory = store_dir(data_root, dataset, backbone)
     manifest = read_manifest(directory)
     if manifest is None or not manifest.get("complete", False):
@@ -91,4 +92,6 @@ def load_embeddings(data_root, dataset, backbone, paths, settings):
     array = np.load(directory / FINAL)
     if array.shape[0] != len(paths):
         raise ValueError("embedding rows do not match the metadata rows")
+    if not as_float32:
+        return array
     return array.astype(np.float32)

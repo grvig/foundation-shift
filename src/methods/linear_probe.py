@@ -90,17 +90,20 @@ class LinearProbe:
         return decision
 
 
-def sweep(features, labels, splits, c_grid, metric_name, max_iter, seed, log=print):
+def sweep(features, labels, splits, c_grid, metric_name, max_iter, seed, log=print,
+          scaler=None):
     """Fit one probe per C on train; score each on every evaluation split.
 
     ``splits`` is an array of split names aligned with the rows of ``features``. Returns
-    a list of row dicts and the fitted probes keyed by C.
+    a list of row dicts and the fitted probes keyed by C. ``scaler`` replaces the usual
+    train-fitted FeatureScaler, for features prepared some other way beforehand.
     """
     metric = metric_function(metric_name)
     splits = np.asarray(splits)
     labels = np.asarray(labels)
     train = splits == "train"
-    scaler = FeatureScaler().fit(features[train])
+    if scaler is None:
+        scaler = FeatureScaler().fit(features[train])
     prepared = scaler.transform(features[train])
     rows = []
     probes = {}
