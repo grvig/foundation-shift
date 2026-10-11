@@ -22,7 +22,14 @@ BACKBONE_COLOURS = {"resnet50": "#2a78d6", "clip_b16": "#eb6834",
 BACKBONE_LABELS = {"resnet50": "ResNet-50 (ImageNet)", "clip_b16": "CLIP ViT-B/16",
                    "siglip_b16": "SigLIP ViT-B/16", "dinov2_b14": "DINOv2 ViT-B/14"}
 METHOD_SHORT = {"linear_probe": "probe", "zero_shot": "zero-shot", "wise_ft": "WiSE-FT",
-                "finetune_last2": "fine-tuned"}
+                "finetune_last2": "fine-tuned",
+                "finetune_last2_aug": "fine-tuned with stain augmentation",
+                "probe_domain_norm": "probe, per-hospital standardisation"}
+WITHIN_TITLES = {
+    "finetune_last2": "fine-tuning against the probe",
+    "finetune_last2_aug": "stain augmentation against plain fine-tuning",
+    "probe_domain_norm": "per-hospital standardisation against the plain probe",
+}
 FINETUNE_METHOD = "finetune_last2"
 INK = "#0b0b0b"
 MUTED = "#52514e"
@@ -117,10 +124,43 @@ def parse_key(key):
         if not key.startswith(backbone + "_"):
             continue
         rest = key[len(backbone) + 1:]
+        # Longest match first: finetune_last2_aug also starts with finetune_last2.
+        found = None
         for method in METHOD_SHORT:
             if rest.startswith(method + "_"):
-                return backbone, method
+                if found is None or len(method) > len(found):
+                    found = method
+        if found is not None:
+            return backbone, found
     raise ValueError("cannot read a backbone and method from " + key)
+
+
+def plot_within(within, path):
+    """Same-backbone differences: one panel per kind of comparison, one row per backbone."""
+    kinds = list(dict.fromkeys(within["method"]))
+    figure, panels = plt.subplots(len(kinds), 1, squeeze=False,
+                                  figsize=(6.0, 1.1 * len(kinds) + 0.45 * len(within)))
+    for panel, kind in zip(panels[:, 0], kinds):
+        rows = within[within["method"] == kind].reset_index(drop=True)
+        labels = []
+        for position, row in rows.iterrows():
+            y = len(rows) - 1 - position
+            panel.errorbar(100 * row["difference"], y,
+                           xerr=[[100 * (row["difference"] - row["low"])],
+                                 [100 * (row["high"] - row["difference"])]],
+                           fmt="o", color=BACKBONE_COLOURS.get(row["backbone"], MUTED),
+                           markersize=7, linewidth=2, capsize=0,
+                           markeredgecolor="white", markeredgewidth=1.2)
+            labels.append(BACKBONE_LABELS.get(row["backbone"], row["backbone"]))
+        panel.axvline(0, color=INK, linewidth=1)
+        panel.set_yticks(range(len(rows)))
+        panel.set_yticklabels(list(reversed(labels)), fontsize=8)
+        panel.set_title(WITHIN_TITLES.get(kind, kind), fontsize=9, color=MUTED, loc="left")
+        style(panel)
+        panel.grid(False, axis="y")
+    panels[-1, 0].set_xlabel("test accuracy difference, percentage points")
+    figure.tight_layout()
+    save(figure, path)
 
 
 def plot_paired(paired, path):

@@ -137,6 +137,21 @@ comparison:
     - backbone: resnet50
       method: finetune_last2
       selection: none
+  # Same-backbone questions: does fine-tuning beat the probe, does stain augmentation
+  # beat plain fine-tuning, does per-hospital standardisation beat the plain probe.
+  within:
+    - method: finetune_last2
+      selection: none
+      against_method: linear_probe
+      against_selection: ood_val
+    - method: finetune_last2_aug
+      selection: none
+      against_method: finetune_last2
+      against_selection: none
+    - method: probe_domain_norm
+      selection: ood_val
+      against_method: linear_probe
+      against_selection: ood_val
 
 # Partial fine-tuning: the last few blocks of the image model and a new linear head train,
 # everything before them stays frozen. Frozen layers store no activations for the backward

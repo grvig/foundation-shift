@@ -20,7 +20,11 @@ from src.plots.figures import BACKBONE_LABELS
 DATASET = "camelyon17"
 CLASS_NAMES = ["normal", "tumour"]
 METHOD_NAMES = {"linear_probe": "probe", "zero_shot": "zero-shot", "wise_ft": "WiSE-FT",
-                "finetune_last2": "fine-tuned"}
+                "finetune_last1": "fine-tuned, 1 block",
+                "finetune_last2": "fine-tuned",
+                "finetune_last4": "fine-tuned, 4 blocks",
+                "finetune_last2_aug": "fine-tuned with stain augmentation",
+                "probe_domain_norm": "probe, per-hospital standardisation"}
 SELECTION_NAMES = {"ood_val": "", "none": "", "id_val": ", C on familiar val"}
 
 
@@ -45,12 +49,17 @@ def method_label(key):
         if not key.startswith(backbone + "_"):
             continue
         rest = key[len(backbone) + 1:]
-        for method, method_name in METHOD_NAMES.items():
-            if not rest.startswith(method + "_"):
-                continue
-            selection = rest[len(method) + 1:]
-            return name.split(" (")[0] + ", " + method_name + SELECTION_NAMES.get(
-                selection, ", " + selection)
+        # Longest match first: finetune_last2_aug also starts with finetune_last2.
+        found = None
+        for method in METHOD_NAMES:
+            if rest.startswith(method + "_"):
+                if found is None or len(method) > len(found):
+                    found = method
+        if found is None:
+            continue
+        selection = rest[len(found) + 1:]
+        return (name.split(" (")[0] + ", " + METHOD_NAMES[found]
+                + SELECTION_NAMES.get(selection, ", " + selection))
     return key
 
 

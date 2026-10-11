@@ -55,3 +55,15 @@ def test_both_figures_are_written_as_pdf_and_png(tmp_path):
     for name in ["main", "line"]:
         assert (tmp_path / (name + ".pdf")).stat().st_size > 1000
         assert (tmp_path / (name + ".png")).stat().st_size > 1000
+
+
+def test_augmented_keys_are_not_mistaken_for_plain_fine_tuning(tmp_path):
+    from src.plots.figures import parse_key
+    from src.plots.figures import plot_within
+
+    assert parse_key("clip_b16_finetune_last2_aug_none") == ("clip_b16", "finetune_last2_aug")
+    within = pd.DataFrame([["clip_b16", "finetune_last2_aug", 0.01, -0.01, 0.03],
+                           ["resnet50", "probe_domain_norm", 0.02, 0.01, 0.04]],
+                          columns=["backbone", "method", "difference", "low", "high"])
+    plot_within(within, tmp_path / "within")
+    assert (tmp_path / "within.png").stat().st_size > 1000

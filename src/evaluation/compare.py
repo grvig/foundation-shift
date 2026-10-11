@@ -23,6 +23,40 @@ def is_reference(row, reference):
     return True
 
 
+def find_row(table, backbone, method, selection):
+    match = table[(table["backbone"] == backbone) & (table["method"] == method)
+                  & (table["selection"] == selection)]
+    if len(match) == 0:
+        return None
+    return match.iloc[0]
+
+
+def compare_within(table, load_predictions, labels, clusters, metric_name, resamples,
+                   make_rng, pairs):
+    """For each backbone, one method against another method on the same backbone.
+
+    ``pairs`` is a list of dicts with method, selection, against_method and
+    against_selection. A pair is skipped for a backbone that lacks either side, so the
+    output fills in as runs finish.
+    """
+    rows = []
+    for pair in pairs:
+        for backbone in table["backbone"].unique():
+            row = find_row(table, backbone, pair["method"], pair["selection"])
+            base = find_row(table, backbone, pair["against_method"], pair["against_selection"])
+            if row is None or base is None:
+                continue
+            difference, low, high = paired_cluster_bootstrap(
+                labels, load_predictions(method_key(row)), load_predictions(method_key(base)),
+                clusters, metric_name, resamples, make_rng())
+            rows.append({"backbone": backbone, "method": pair["method"],
+                         "against": pair["against_method"], "test": row["test"],
+                         "against_test": base["test"], "difference": difference,
+                         "low": low, "high": high,
+                         "significant": low > 0.0 or high < 0.0})
+    return pd.DataFrame(rows)
+
+
 def compare_to_reference(table, load_predictions, labels, clusters, metric_name,
                          resamples, make_rng, reference):
     """One row per non-reference method: its test score minus the reference's, with CI.

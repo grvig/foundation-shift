@@ -21,7 +21,9 @@ from src.config import load_config
 from src.plots.figures import BACKBONE_LABELS
 
 METHOD_LABELS = {"linear_probe": "linear probe", "zero_shot": "zero-shot",
-                 "wise_ft": "WiSE-FT", "finetune_last2": "fine-tune last 2 blocks"}
+                 "wise_ft": "WiSE-FT", "finetune_last2": "fine-tune last 2 blocks",
+                 "finetune_last2_aug": "fine-tune last 2 blocks, stain augmentation",
+                 "probe_domain_norm": "linear probe, per-hospital standardisation"}
 SELECTION_LABELS = {"ood_val": "C on new-hospital val", "id_val": "C on familiar val",
                     "none": ""}
 

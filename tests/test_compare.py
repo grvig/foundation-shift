@@ -53,3 +53,22 @@ def test_the_reference_must_appear_exactly_once():
     with pytest.raises(ValueError):
         compare_to_reference(table([["clip_b16", "zero_shot", "none", 0.8]]), load, LABELS,
                              CLUSTERS, "accuracy", 10, make_rng, REFERENCE)
+
+
+def test_within_compares_each_backbone_with_itself_and_skips_missing_sides():
+    from src.evaluation.compare import compare_within
+
+    rows = pd.DataFrame([
+        ["clip_b16", "finetune_last2", "none", 0.95],
+        ["clip_b16", "finetune_last2_aug", "none", 0.98],
+        ["resnet50", "finetune_last2", "none", 0.90],
+    ], columns=["backbone", "method", "selection", "test"])
+    saved = {"clip_b16_finetune_last2_none": predictions_with_errors(5),
+             "clip_b16_finetune_last2_aug_none": predictions_with_errors(50)}
+    pairs = [{"method": "finetune_last2_aug", "selection": "none",
+              "against_method": "finetune_last2", "against_selection": "none"}]
+    result = compare_within(rows, saved.get, LABELS, CLUSTERS, "accuracy", 200, make_rng,
+                            pairs)
+    assert list(result["backbone"]) == ["clip_b16"]
+    assert result.iloc[0]["difference"] == pytest.approx(0.18)
+    assert bool(result.iloc[0]["significant"])

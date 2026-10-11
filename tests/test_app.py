@@ -51,3 +51,12 @@ def test_the_patch_filter_can_be_changed():
     assert len(app.exception) == 0
     app.button[0].click().run()
     assert len(app.exception) == 0
+
+
+def test_variant_labels_use_the_longest_matching_method():
+    import shared
+
+    assert shared.method_label("clip_b16_finetune_last2_aug_none") == (
+        "CLIP ViT-B/16, fine-tuned with stain augmentation")
+    assert shared.method_label("resnet50_finetune_last4_none") == (
+        "ResNet-50, fine-tuned, 4 blocks")

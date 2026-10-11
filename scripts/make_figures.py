@@ -19,6 +19,7 @@ from src.config import load_config
 from src.plots.figures import plot_main
 from src.plots.figures import plot_on_the_line
 from src.plots.figures import plot_paired
+from src.plots.figures import plot_within
 
 
 def main():
@@ -39,6 +40,11 @@ def main():
     paired_path = results / (args.dataset + "_paired.csv")
     if paired_path.exists():
         plot_paired(pd.read_csv(paired_path), figures / (args.dataset + "_paired"))
+    within_path = results / (args.dataset + "_paired_within.csv")
+    if within_path.exists():
+        within = pd.read_csv(within_path)
+        if len(within) > 0:
+            plot_within(within, figures / (args.dataset + "_within"))
     line_path = results / (args.dataset + "_on_the_line.csv")
     if line_path.exists():
         fit = pd.read_csv(results / (args.dataset + "_on_the_line_fit.csv")).iloc[0]

@@ -21,6 +21,9 @@ import pandas as pd
 from src.config import load_config
 from src.data.datasets import load_metadata
 from src.evaluation.compare import compare_to_reference
+from src.evaluation.compare import compare_within
+
+EXTRA_TABLES = ["finetune_aug", "domain_norm"]
 from src.evaluation.compare import method_key
 
 
@@ -74,6 +77,20 @@ def main():
     paired.to_csv(results_dir / (args.dataset + "_paired.csv"), index=False,
                   float_format="%.4f")
     print(paired.to_string(index=False))
+
+    # Same-backbone comparisons draw on every results table, including the variants.
+    everything = table
+    for name in EXTRA_TABLES:
+        path = results_dir / (args.dataset + "_" + name + ".csv")
+        if path.exists():
+            everything = pd.concat([everything, pd.read_csv(path)], ignore_index=True)
+    within = compare_within(everything, load, metadata["label"].to_numpy()[test],
+                            metadata[settings["cluster_column"]].to_numpy()[test],
+                            settings["metric"], int(bootstrap["resamples"]),
+                            config.fresh_rng, config.section("comparison")["within"])
+    within.to_csv(results_dir / (args.dataset + "_paired_within.csv"), index=False,
+                  float_format="%.4f")
+    print(within.to_string(index=False))
 
 
 if __name__ == "__main__":
