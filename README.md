@@ -10,7 +10,8 @@ Foundation models do not fix the hospital shift on their own: used as frozen fea
 CLIP, SigLIP and DINOv2 are not reliably better than an ImageNet ResNet-50 at an unseen
 hospital, and zero-shot classification is at chance. Once their last two blocks are
 fine-tuned, all three beat an equally fine-tuned ResNet-50 by 3 to 4 points, and across
-three training seeds every foundation-model run beats every ResNet-50 run. The evidence
+three training seeds every foundation-model run beats every ResNet-50 run. A cheap stain
+augmentation narrows that lead to 1.4 to 2.2 points without closing it. The evidence
 behind every claim is resampled at the level of tissue slides, because the test hospital
 contributes only ten of them. Details and caveats are under
 [What the Camelyon17 results show](#what-the-camelyon17-results-show).
@@ -102,8 +103,8 @@ Numbers below are from `results/camelyon17_*.csv`. Differences are in test accur
 8. **The two new hospitals disagree about which model is best.** Among the probes, SigLIP
    is second-best on hospital 1 and worst on hospital 2; CLIP is the reverse. Choosing a
    model, or its regularisation, on one unseen hospital is weak evidence about another.
-9. **Errors cluster on a few slides.** For every probe, WiSE-FT and fine-tuned model, 35
-   to 64 percent of all test errors fall on just two of the ten test slides
+9. **Errors cluster on a few slides.** For every method except zero-shot, 35 to 64
+   percent of all test errors fall on just two of the ten test slides
    (`camelyon17_per_slide.csv`).
    85,054 test patches are much less evidence than the number suggests, which is why
    every interval here resamples slides.
@@ -115,10 +116,29 @@ Numbers below are from `results/camelyon17_*.csv`. Differences are in test accur
     and little more from four; DINOv2 is already at 96.1 with one block. These are single
     runs, and the seed repeats move test accuracy by about a point, so only the one-to-two
     block step for CLIP and SigLIP is larger than that noise.
+11. **Stain augmentation helps the ImageNet model most and narrows, but does not close,
+    the gap.** Fine-tuning with colour jitter, flips and right-angle turns
+    (`camelyon17_finetune_aug.csv`) lifts ResNet-50 from 91.6 to 93.5 (+1.9, +0.7 to
+    +2.6), CLIP by +0.6 (+0.0 to +1.6), and leaves SigLIP and DINOv2 unchanged
+    (`camelyon17_paired_within.csv`). Plain fine-tuned foundation models still beat the
+    augmented ResNet-50: DINOv2 +2.2 (+1.0 to +4.1), SigLIP +1.6 (+0.1 to +3.8), CLIP +1.4
+    (+0.6 to +2.7). Two cautions: each augmented model is one training run, and
+    ResNet-50's seed spread is 1.6 points, so the slide interval understates the
+    uncertainty in these differences; and the lead is now 1.4 to 2.2 points, not 3 to 4.
+    Part of what foundation models offered over ImageNet features is what a stain
+    augmentation also offers.
+12. **Unlabelled images from the new hospital rescue the weakest probes.** Standardising
+    each hospital's features with its own statistics (`camelyon17_domain_norm.csv`) uses
+    the test hospital's images but none of its labels. It lifts the ResNet-50 probe by
+    +2.7 (+0.9 to +6.0) and the SigLIP probe by +4.2 (+1.6 to +9.6), and leaves CLIP and
+    DINOv2 unchanged, so all four probes land between 90 and 92: the two weakest plain
+    probes gain, the two strongest do not. This is transductive: it needs a batch of the
+    new site's images before predicting.
 
 Figures: `figures/camelyon17_main` (every backbone and method against the familiar
 hospitals), `camelyon17_paired` (the paired differences behind points 2 and 3),
-`camelyon17_on_the_line` (point 7) and `camelyon17_blocks` (point 10).
+`camelyon17_on_the_line` (point 7), `camelyon17_blocks` (point 10) and
+`camelyon17_within` (same-backbone comparisons behind points 3, 11 and 12).
 
 The table, the CSVs in `results/` and the figures in `figures/` are all regenerated from
 the cached embeddings by one command, which runs each analysis script in turn:
