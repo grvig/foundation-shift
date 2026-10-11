@@ -15,6 +15,9 @@ also the row the main tables use.
 ``--blocks N`` trains the last N blocks instead of the configured number, as an ablation;
 those rows go to results/<dataset>_finetune_blocks.csv and never touch the main tables.
 
+``--augment`` trains with stain augmentation (colour jitter, flips, right-angle turns);
+those rows go to results/<dataset>_finetune_aug.csv.
+
 ``--quick`` trains on 512 images and evaluates 512 per split, writing to a separate
 ``_quick`` file, to check a backbone end to end before the real run.
 """
@@ -44,6 +47,7 @@ from src.methods.finetune import freeze_all_but
 from src.methods.finetune import image_model
 from src.methods.finetune import predict
 from src.methods.finetune import train
+from src.methods.augment import training_transform
 from src.methods.finetune import trainable_names
 from src.methods.linear_probe import EVALUATION_SPLITS
 from src.models.backbones import backbone_settings
@@ -74,6 +78,8 @@ def main():
                         help="added to the config seed; 0 is the run reported in the tables")
     parser.add_argument("--blocks", type=int, default=0,
                         help="train this many final blocks instead of the configured number")
+    parser.add_argument("--augment", action="store_true",
+                        help="train with the stain augmentation from the config")
     parser.add_argument("--config", default=None)
     args = parser.parse_args()
 
@@ -118,8 +124,12 @@ def main():
 
     chosen = sample_rows(np.flatnonzero(splits == "train"), train_count, rng)
     workers = int(config.section("embedding")["num_workers"])
+    train_transform = encoder.transform
+    if args.augment:
+        train_transform = training_transform(encoder.transform,
+                                             config.section("augmentation"))
     loader = DataLoader(LabelledImages(image_dir, paths[chosen], labels[chosen],
-                                       encoder.transform),
+                                       train_transform),
                         batch_size=int(settings["batch_size"]), shuffle=True,
                         num_workers=workers, generator=torch.Generator().manual_seed(run_seed))
     started = time.time()
@@ -128,6 +138,8 @@ def main():
 
     metric = metric_function(dataset_settings["metric"])
     method = "finetune_last" + str(settings["trainable_blocks"])
+    if args.augment:
+        method = method + "_aug"
     row = {"dataset": args.dataset, "backbone": args.backbone, "method": method,
            "selection": "none", "c": float("nan")}
     predictions = np.full(len(metadata), -1, dtype=np.int16)
@@ -158,7 +170,9 @@ def main():
         if args.seed != 0:
             key = args.backbone + "_" + method + "_seed" + str(args.seed)
         np.save(directory / (key + ".npy"), predictions)
-    if ablation:
+    if args.augment:
+        replace_row(results / (args.dataset + "_finetune_aug" + suffix + ".csv"), row)
+    elif ablation:
         replace_row(results / (args.dataset + "_finetune_blocks" + suffix + ".csv"), row)
     else:
         # Every seed goes into the seeds file; seed 0 is also the run the main tables use.

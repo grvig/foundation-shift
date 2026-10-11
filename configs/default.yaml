@@ -156,3 +156,13 @@ fine_tuning:
 # probe (alpha 1). Alpha is chosen with the same two selection rules as C.
 wise_ft:
   alphas: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
+# Stain augmentation for the fine-tuning comparison (see src/methods/augment.py). Moderate
+# values: strong enough to vary the stain visibly, mild enough to keep tumour cells
+# recognisable. Fixed before any augmented run was looked at.
+augmentation:
+  brightness: 0.25
+  contrast: 0.25
+  saturation: 0.25
+  hue: 0.05
+  flips: true
