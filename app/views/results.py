@@ -104,3 +104,28 @@ if blocks is not None:
     path = figures / "camelyon17_blocks.png"
     if path.exists():
         columns[1].image(str(path), use_container_width=True)
+
+within = shared.read_result("paired_within")
+if within is not None and len(within) > 0:
+    st.subheader("Within one backbone")
+    st.write("Each change measured against the same backbone without it, on the same "
+             "resampled slides: fine-tuning against the probe, stain augmentation against "
+             "plain fine-tuning, and per-hospital standardisation against the plain probe.")
+    rows = []
+    for _, row in within.iterrows():
+        verdict = "no clear difference"
+        if bool(row["significant"]) and row["difference"] > 0:
+            verdict = "better"
+        if bool(row["significant"]) and row["difference"] < 0:
+            verdict = "worse"
+        rows.append({"backbone": shared.BACKBONE_LABELS[row["backbone"]],
+                     "change": shared.CHANGE_NAMES.get(row["method"], row["method"]),
+                     "difference": format(100.0 * row["difference"], "+.1f"),
+                     "interval": format(100.0 * row["low"], "+.1f") + " to "
+                     + format(100.0 * row["high"], "+.1f"),
+                     "verdict": verdict})
+    columns = st.columns([3, 2])
+    columns[0].dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    path = figures / "camelyon17_within.png"
+    if path.exists():
+        columns[1].image(str(path), use_container_width=True)

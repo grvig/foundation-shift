@@ -23,6 +23,10 @@ DINOv2, trained on images alone.
 - *Linear probe*: train only a final linear layer on the frozen model's features.
 - *WiSE-FT*: blend the zero-shot classifier with the probe.
 - *Fine-tuning*: also retrain the model's last two blocks.
+- *Stain augmentation*: fine-tuning while randomly varying colour, flips and rotations,
+  the standard cheap defence against differences in how labs stain tissue.
+- *Per-hospital standardisation*: a probe on features re-centred with each hospital's
+  own statistics, which uses the new hospital's images but none of its labels.
 
 **The evidence.** Every score comes with a 95% interval from resampling whole slides,
 because thousands of patches from one slide are not thousands of independent tests.

@@ -16,9 +16,9 @@ import sys
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-STEPS = ["run_main.py", "run_domain_norm.py", "run_compare.py", "run_on_the_line.py", "summarise_seeds.py",
-         "summarise_blocks.py", "per_slide.py",
-         "data_card.py", "make_figures.py", "make_readme_table.py"]
+STEPS = ["run_main.py", "run_domain_norm.py", "run_compare.py", "run_on_the_line.py",
+         "summarise_seeds.py", "summarise_blocks.py", "per_slide.py", "data_card.py",
+         "make_figures.py", "make_readme_table.py"]
 
 
 def main():

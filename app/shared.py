@@ -26,6 +26,9 @@ METHOD_NAMES = {"linear_probe": "probe", "zero_shot": "zero-shot", "wise_ft": "W
                 "finetune_last2_aug": "fine-tuned with stain augmentation",
                 "probe_domain_norm": "probe, per-hospital standardisation"}
 SELECTION_NAMES = {"ood_val": "", "none": "", "id_val": ", C on familiar val"}
+CHANGE_NAMES = {"finetune_last2": "fine-tuning, vs probe",
+                "finetune_last2_aug": "stain augmentation, vs plain fine-tuning",
+                "probe_domain_norm": "per-hospital standardisation, vs plain probe"}
 
 
 @st.cache_resource
