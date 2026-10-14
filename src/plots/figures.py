@@ -32,6 +32,8 @@ WITHIN_TITLES = {
 }
 FINETUNE_METHOD = "finetune_last2"
 INK = "#0b0b0b"
+# The demo app's page colour (app/style.py); PNGs are drawn on it.
+PAPER = "#f7f5f0"
 MUTED = "#52514e"
 GRID = "#e4e3df"
 
@@ -286,7 +288,19 @@ def plot_blocks(summary, path):
 
 
 def save(figure, path):
+    """PDF on white for the report; PNG on the demo app's paper colour, so the figures
+    sit in the page rather than on top of it."""
     path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(path.with_suffix(".pdf"))
-    figure.savefig(path.with_suffix(".png"), dpi=200)
+    figure.set_facecolor(PAPER)
+    for axes in figure.axes:
+        axes.set_facecolor(PAPER)
+    legend_frames = []
+    for axes in figure.axes:
+        legend = axes.get_legend()
+        if legend is not None:
+            legend_frames.append(legend.get_frame())
+    for frame in legend_frames:
+        frame.set_facecolor(PAPER)
+    figure.savefig(path.with_suffix(".png"), dpi=200, facecolor=PAPER)
     plt.close(figure)
