@@ -1,0 +1,15 @@
+# Theme for the demo app: paper background, ink text, haematoxylin purple accent.
+# The rest of the look lives in app/style.py.
+[theme]
+base = "light"
+primaryColor = "#5b3a8a"
+backgroundColor = "#f7f5f0"
+secondaryBackgroundColor = "#efebe3"
+textColor = "#1c1a17"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false
