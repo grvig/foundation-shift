@@ -27,7 +27,7 @@ CSS = """
 html, body, [data-testid="stAppViewContainer"], .stMarkdown, p, li, label, input, select {
   font-family: 'IBM Plex Sans', sans-serif;
 }
-.block-container { max-width: 1000px; padding-top: 2.2rem; padding-bottom: 4rem; }
+.block-container { max-width: 1000px; padding-top: 4.6rem; padding-bottom: 4rem; }
 [data-testid="stAppDeployButton"], #MainMenu, footer { display: none; }
 h1, h2, h3 { font-family: 'IBM Plex Serif', serif !important; color: var(--ink);
   letter-spacing: -0.01em; }
@@ -43,12 +43,20 @@ h1 { font-weight: 600 !important; font-size: 2.1rem !important; margin-bottom: 0
 .section h2 { display: inline; font-size: 1.35rem; font-weight: 600; }
 .section p { color: var(--ink); max-width: 46rem; line-height: 1.55; margin-top: 0.6rem; }
 
-table.paper { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 0.6rem 0 0.3rem 0;
+table.paper { border-collapse: collapse; width: auto; min-width: 60%; font-size: 0.9rem; margin: 0.6rem 0 0.3rem 0;
   border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); }
 table.paper th { font-weight: 500; text-align: left; padding: 7px 10px;
   border-bottom: 1px solid var(--ink); color: var(--ink); background: transparent; }
 table.paper td { padding: 5px 10px; border: none; color: var(--ink); background: transparent; }
-table.paper tr.group td { border-top: 1px solid var(--rule); }
+/* Streamlit's own markdown tables draw a box round every cell; a journal table has
+   rules above and below and a thin one under the header, nothing else. */
+.stMarkdown table.paper th, .stMarkdown table.paper td { border-left: none !important;
+  border-right: none !important; border-top: none !important; }
+.stMarkdown table.paper td { border-bottom: none !important; }
+.stMarkdown table.paper th { border-bottom: 1px solid var(--ink) !important;
+  background: transparent !important; }
+.stMarkdown table.paper tr { background: transparent !important; border: none !important; }
+.stMarkdown table.paper tr.group td { border-top: 1px solid var(--rule) !important; }
 table.paper td.num, table.paper th.num { text-align: right; font-family: 'IBM Plex Mono', monospace;
   font-variant-numeric: tabular-nums; white-space: nowrap; }
 table.paper td.strong { font-weight: 600; }
@@ -132,7 +140,7 @@ def figure(path, caption, width=None):
     if not path.exists():
         return
     if width is None:
-        st.image(str(path), use_container_width=True)
+        st.image(str(path), width="stretch")
     else:
         st.image(str(path), width=width)
     st.markdown("<div class='caption'>" + caption + "</div>", unsafe_allow_html=True)

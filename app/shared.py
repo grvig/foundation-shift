@@ -31,17 +31,17 @@ CHANGE_NAMES = {"finetune_last2": "fine-tuning, vs probe",
                 "probe_domain_norm": "per-hospital standardisation, vs plain probe"}
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def config():
     return load_config()
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner="Loading 455,954 patch records")
 def metadata():
     return load_metadata(config(), DATASET)
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def image_root():
     return dataset_dir(config(), DATASET)
 
@@ -66,7 +66,7 @@ def method_label(key):
     return key
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner="Loading saved predictions")
 def predictions():
     """Every saved prediction file, keyed by its file name, in a stable display order."""
     directory = config().data_root() / "predictions" / DATASET
