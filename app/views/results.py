@@ -43,3 +43,36 @@ style.figure(figures / "camelyon17_main.png",
              "<b>Figure 1.</b> Hollow circles: familiar hospitals. Filled markers: the "
              "test hospital with its slide interval, circles for probes and squares for "
              "fine-tuned models. Diamonds: zero-shot.")
+
+paired = shared.read_result("paired")
+if paired is not None:
+    style.section("2", "Is the difference real?",
+                  "Each method's test accuracy minus a reference's, with both scored on "
+                  "the same resampled slides. A difference counts only when its interval "
+                  "stays on one side of zero.")
+    references = list(dict.fromkeys(paired["reference"]))
+    reference = st.radio("Compared against", references, horizontal=True,
+                         format_func=shared.method_label)
+    chosen = shared.in_report_order(paired[paired["reference"] == reference])
+    rows = []
+    for _, row in chosen.iterrows():
+        verdict = "no clear difference"
+        if bool(row["significant"]) and row["difference"] > 0:
+            verdict = "better"
+        if bool(row["significant"]) and row["difference"] < 0:
+            verdict = "worse"
+        rows.append({"backbone": shared.short_backbone(row["backbone"]),
+                     "method": shared.method_only(row["method"], row["selection"]),
+                     "difference": format(100.0 * row["difference"], "+.1f"),
+                     "interval": format(100.0 * row["low"], "+.1f") + " to "
+                     + format(100.0 * row["high"], "+.1f"),
+                     "verdict": verdict})
+    style.table(rows, [("backbone", "Backbone", "text"), ("method", "Method", "text"),
+                       ("difference", "Difference", "num strong"),
+                       ("interval", "95% CI", "num"), ("verdict", "Verdict", "quiet")],
+                "<b>Table 2.</b> Percentage points against "
+                + shared.method_label(reference) + ".", group="backbone")
+    style.figure(figures / "camelyon17_paired.png",
+                 "<b>Figure 2.</b> The same differences for all three references. "
+                 "Zero-shot and WiSE-FT rows are in the table but not the plot: zero-shot "
+                 "deficits would squash the axis, and WiSE-FT sits on its probe.")
