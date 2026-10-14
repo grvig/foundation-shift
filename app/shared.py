@@ -46,6 +46,40 @@ def image_root():
     return dataset_dir(config(), DATASET)
 
 
+BACKBONE_ORDER = ["resnet50", "clip_b16", "siglip_b16", "dinov2_b14"]
+METHOD_ORDER = ["linear_probe", "zero_shot", "wise_ft", "finetune_last2"]
+
+
+def short_backbone(backbone):
+    return BACKBONE_LABELS.get(backbone, backbone).split(" (")[0]
+
+
+def method_only(method, selection):
+    """A method's name without its backbone, e.g. 'probe, C on familiar val'."""
+    return METHOD_NAMES.get(method, method) + SELECTION_NAMES.get(selection, ", " + selection)
+
+
+def in_report_order(table):
+    """Rows sorted by backbone, then method, the order every table in the app uses."""
+    ordered = table.copy()
+    ordered["_b"] = ordered["backbone"].map(backbone_position)
+    ordered["_m"] = ordered["method"].map(method_position)
+    ordered = ordered.sort_values(["_b", "_m", "selection"], ascending=[True, True, False])
+    return ordered.drop(columns=["_b", "_m"]).reset_index(drop=True)
+
+
+def backbone_position(backbone):
+    if backbone in BACKBONE_ORDER:
+        return BACKBONE_ORDER.index(backbone)
+    return len(BACKBONE_ORDER)
+
+
+def method_position(method):
+    if method in METHOD_ORDER:
+        return METHOD_ORDER.index(method)
+    return len(METHOD_ORDER)
+
+
 def method_label(key):
     """Readable name for a predictions file such as clip_b16_linear_probe_ood_val."""
     for backbone, name in BACKBONE_LABELS.items():

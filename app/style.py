@@ -103,13 +103,13 @@ def table(rows, columns, caption="", group=None):
     """A journal-style table.
 
     ``columns`` is a list of (key, heading, kind) with kind "text", "num", "strong" or
-    "quiet". When ``group`` names a column, its value is printed only on the first row
+    "quiet", or several of those separated by spaces, such as "num strong". When ``group`` names a column, its value is printed only on the first row
     of each run and a thin rule separates the runs.
     """
     parts = ["<table class='paper'><thead><tr>"]
     for key, heading, kind in columns:
         css = ""
-        if kind == "num":
+        if "num" in kind.split():
             css = " class='num'"
         parts.append("<th" + css + ">" + html.escape(heading) + "</th>")
     parts.append("</tr></thead><tbody>")
