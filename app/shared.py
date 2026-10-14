@@ -59,12 +59,24 @@ def method_only(method, selection):
     return METHOD_NAMES.get(method, method) + SELECTION_NAMES.get(selection, ", " + selection)
 
 
-def in_report_order(table):
-    """Rows sorted by backbone, then method, the order every table in the app uses."""
+def in_report_order(table, then=None):
+    """Rows sorted by backbone, then method, the order every table in the app uses.
+
+    Tables with a selection column put the WILDS rule (ood_val) before the familiar one;
+    ``then`` names one more column to sort by last, such as the block count.
+    """
     ordered = table.copy()
     ordered["_b"] = ordered["backbone"].map(backbone_position)
     ordered["_m"] = ordered["method"].map(method_position)
-    ordered = ordered.sort_values(["_b", "_m", "selection"], ascending=[True, True, False])
+    keys = ["_b", "_m"]
+    ascending = [True, True]
+    if "selection" in ordered.columns:
+        keys.append("selection")
+        ascending.append(False)
+    if then is not None:
+        keys.append(then)
+        ascending.append(True)
+    ordered = ordered.sort_values(keys, ascending=ascending)
     return ordered.drop(columns=["_b", "_m"]).reset_index(drop=True)
 
 
