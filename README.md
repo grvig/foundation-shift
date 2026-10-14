@@ -157,11 +157,14 @@ pip install streamlit
 python -m streamlit run app/Home.py
 ```
 
-Three pages. **Browse patches** shows real tissue patches from any hospital with two
-chosen methods' answers, filtered to where they disagree, plus accuracy slide by slide.
-**Results** shows the tables and figures, read from `results/` and `figures/`. **About**
-explains the protocol in plain words. The app only reads saved predictions; it never runs
-a model, so it starts in under a minute on a laptop.
+Three pages, laid out like a printed results section: journal-style tables, numbered
+figures with captions, and a paper-coloured theme (`.streamlit/config.toml`,
+`app/style.py`). **Patches** shows real tissue patches from any hospital with two chosen
+methods' answers, filtered to where they disagree, plus accuracy slide by slide.
+**Results** walks through the findings in six numbered sections, every number read from
+`results/` and `figures/`. **Method** describes the data, models, methods and statistics.
+The app only reads saved predictions; it never runs a model, so it starts in under a
+minute on a laptop.
 
 ## Setup
 
