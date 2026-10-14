@@ -1,37 +1,83 @@
-"""What the project tests and how, in plain words."""
+"""What the project tests and how, written like a short methods section."""
 
 import streamlit as st
 
-st.title("About")
-st.markdown("""
-**The question.** Large pretrained image models are often called robust. This project
-checks whether they keep working when they are deployed somewhere they have never seen,
-using the WILDS benchmark's real shifts instead of synthetic corruptions.
+import shared
+import style
 
-**The data.** Camelyon17-WILDS: 455,954 tissue patches from five hospitals, each labelled
-tumour or normal. Models train on three hospitals. Hospital 1 is used for validation and
-hospital 2 for the final test; neither appears in training.
+style.header("Camelyon17 · hospital shift",
+             "Method",
+             "Large pretrained image models are often called robust. This project checks "
+             "whether that holds when a model trained at some hospitals is used at one it "
+             "has never seen, on a real shift rather than an artificial one.")
 
-**The models.** An ImageNet-trained ResNet-50, the pre-foundation-model baseline, and
-three foundation models: CLIP and SigLIP, trained on image-text pairs from the web, and
-DINOv2, trained on images alone.
+style.section("1", "Data",
+              "Camelyon17-WILDS: tissue patches from lymph node sections, each labelled "
+              "by whether its centre holds tumour. Hospitals 0, 3 and 4 train the models; "
+              "hospital 1 validates and hospital 2 tests, and neither is seen in training. "
+              "Labels, hospitals and splits come from the official WILDS metadata, and "
+              "every image was checked against it.")
+card = shared.read_result("data_card")
+if card is not None:
+    names = {"train": "train", "id_val": "familiar validation", "ood_val": "new, validation",
+             "test": "new, test"}
+    rows = []
+    for _, row in card.iterrows():
+        rows.append({"split": names.get(row["split"], row["split"]),
+                     "hospital": str(row["domain"]),
+                     "patches": format(int(row["images"]), ","),
+                     "slides": str(int(row["clusters"])),
+                     "tumour": shared.percent(row["positive_share"])})
+    style.table(rows, [("split", "Split", "text"), ("hospital", "Hospital", "num"),
+                       ("patches", "Patches", "num"), ("slides", "Slides", "num"),
+                       ("tumour", "Tumour %", "num")],
+                "<b>Table 1.</b> Every hospital is close to half tumour, so a drop at a new "
+                "hospital comes from how its images look, not from a different mix of "
+                "cases.", group="split")
 
-**The methods.**
+style.section("2", "Models",
+              "One image model from before the foundation-model era and three after it, "
+              "all run at 224 pixels with the whole patch resized the same way for each.")
+style.table([
+    {"model": "ResNet-50", "trained on": "ImageNet, 1.3M labelled photos", "type": "supervised"},
+    {"model": "CLIP ViT-B/16", "trained on": "400M web image-text pairs", "type": "image and text"},
+    {"model": "SigLIP ViT-B/16", "trained on": "web image-text pairs, sigmoid loss",
+     "type": "image and text"},
+    {"model": "DINOv2 ViT-B/14", "trained on": "142M curated images, no labels",
+     "type": "self-supervised"},
+], [("model", "Model", "strong"), ("trained on", "Pretrained on", "text"),
+    ("type", "Kind", "quiet")])
 
-- *Zero-shot*: describe each class in words and pick the closest description. No
-  training at all.
-- *Linear probe*: train only a final linear layer on the frozen model's features.
-- *WiSE-FT*: blend the zero-shot classifier with the probe.
-- *Fine-tuning*: also retrain the model's last two blocks.
-- *Stain augmentation*: fine-tuning while randomly varying colour, flips and rotations,
-  the standard cheap defence against differences in how labs stain tissue.
-- *Per-hospital standardisation*: a probe on features re-centred with each hospital's
-  own statistics, which uses the new hospital's images but none of its labels.
+style.section("3", "Methods",
+              "From cheapest to most adaptation. Only per-hospital standardisation uses "
+              "anything from the new hospital, and then only its images, never its labels.")
+style.table([
+    {"method": "Zero-shot", "how": "describe each class in words, pick the closest description",
+     "trains": "nothing"},
+    {"method": "Linear probe", "how": "logistic regression on the frozen model's features",
+     "trains": "one linear layer"},
+    {"method": "WiSE-FT", "how": "blend the zero-shot and probe classifiers",
+     "trains": "one linear layer"},
+    {"method": "Per-hospital standardisation",
+     "how": "probe on features re-centred with each hospital's own statistics",
+     "trains": "one linear layer"},
+    {"method": "Fine-tuning", "how": "retrain the last two blocks with a new head",
+     "trains": "about 9 to 21M parameters"},
+    {"method": "Stain augmentation", "how": "fine-tuning with random colour, flips and turns",
+     "trains": "about 9 to 21M parameters"},
+], [("method", "Method", "strong"), ("how", "How it works", "text"),
+    ("trains", "What trains", "quiet")])
 
-**The evidence.** Every score comes with a 95% interval from resampling whole slides,
-because thousands of patches from one slide are not thousands of independent tests.
-Two methods are compared on the same resampled slides, and a difference only counts when
-its interval excludes zero.
+style.section("4", "Evidence",
+              "The test hospital has 85,054 patches but only ten slides, and patches from "
+              "one slide share its stain and its patient. So every 95 percent interval "
+              "resamples whole slides rather than patches. Two methods are compared on the "
+              "same resampled slides, and a difference counts only when its interval stays "
+              "on one side of zero. Fine-tuning was repeated with three seeds to measure "
+              "how much a result moves between training runs, which the slide interval "
+              "cannot see.")
 
-The code, data checks and every number are in the repository README.
-""")
+style.section("5", "Reproducing",
+              "Everything in this app is read from the repository's results and figures "
+              "folders; the app never runs a model. <code>python scripts/run_all.py "
+              "camelyon17</code> regenerates them from the cached embeddings.")
