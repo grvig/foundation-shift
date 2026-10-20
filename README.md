@@ -1,7 +1,7 @@
 # foundation-shift
 
 Testing whether large pretrained vision models (CLIP, SigLIP, DINOv2) stay accurate when
-deployed somewhere new - unseen camera traps and an unseen hospital - using the
+deployed at a hospital they have never seen, using Camelyon17 from the
 [WILDS](https://wilds.stanford.edu/) benchmark.
 
 ## Headline (Camelyon17)
@@ -19,17 +19,15 @@ contributes only ten of them. Details and caveats are under
 ## Question
 
 Pretrained vision models are often described as robust. WILDS measures robustness on real
-deployment shifts rather than synthetic corruptions:
+deployment shifts rather than synthetic corruptions. Camelyon17 is tumour detection in
+tissue patches, where what changes at test time is the hospital, and the official metric
+is accuracy.
 
-| Dataset | Task | What shifts at test time | Official metric |
-|---|---|---|---|
-| Camelyon17 | tumour detection in tissue patches | the hospital | accuracy |
-| iWildCam | species classification, 182 classes | the camera trap | macro-F1 |
-
-We compare an ImageNet ResNet-50 against CLIP, SigLIP and DINOv2 under four adaptation
-methods (zero-shot, linear probe, fine-tuning, weight-space ensembling) and report every
-result twice: on familiar data (in-distribution) and on the unseen domain
-(out-of-distribution).
+We compare an ImageNet ResNet-50 against CLIP, SigLIP and DINOv2 under six ways of using
+them: zero-shot, linear probe, WiSE-FT (weight-space ensembling of the two), partial
+fine-tuning, fine-tuning with stain augmentation, and a probe on per-hospital
+standardised features. Every result is reported twice: on familiar data
+(in-distribution) and on the unseen hospital (out-of-distribution).
 
 ## Results: Camelyon17
 
@@ -184,13 +182,7 @@ Then fetch and verify the data (about 15 minutes on a fast connection) and embed
 ```
 python scripts/prepare_data.py camelyon17
 python scripts/embed.py camelyon17 all
-python scripts/prepare_data.py iwildcam
-python scripts/embed.py iwildcam all
 ```
-
-iWildCam has no mirror, so its roughly 200,000 images are fetched one file at a time from
-the official bundle, in parallel. Rerunning after an interruption fetches only what is
-missing.
 
 Labels, hospitals and splits come from the official WILDS metadata. The images come from
 a pinned copy on Hugging Face, because the official bundle only downloads as a single
@@ -201,6 +193,27 @@ files; preparation stops on any disagreement.
 Images and embeddings live outside the repository, in `~/wilds-data` by default. Set the
 `WILDS_DATA` environment variable to keep them somewhere else. Never put them in a synced
 folder such as OneDrive.
+
+## Second dataset: iWildCam (not yet run)
+
+The plan included iWildCam-WILDS, camera-trap photos of 182 species where what changes at
+test time is the camera, with macro-F1 as the official metric. There are no iWildCam
+results. Its only official source, the WILDS bundle on CodaLab, has served an expired
+TLS certificate since 7 October 2026, and the download is not attempted with certificate
+checks switched off. No complete copy with the WILDS splits was found elsewhere; the only
+WILDS-derived copy on Hugging Face appears, from its name, to hold the test split alone.
+
+The data side is written and unit-tested: the metadata reader with the official split
+mapping (`src/data/iwildcam.py`), a parallel, resumable per-file downloader
+(`src/data/fetch.py`), per-dataset bootstrap clusters (camera traps), and zero-shot
+prompts built from the species names. The analysis scripts have only been run end to end
+on Camelyon17, so a first iWildCam run will need checking.
+
+```
+python scripts/prepare_data.py iwildcam
+python scripts/embed.py iwildcam all
+python scripts/run_all.py iwildcam
+```
 
 ## Conventions
 
