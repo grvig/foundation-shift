@@ -177,6 +177,12 @@ python -m pytest
 The first install line is for an NVIDIA GPU. Without one, drop it and pip installs the
 CPU build; everything except embedding extraction and fine-tuning runs fine on CPU.
 
+On Windows, clone into a short path such as `C:\Users\<you>\foundation-shift`. PyTorch
+installs files nested about 140 characters deep, and inside a long folder path they pass
+Windows' 260-character limit; pip then fails with "WinError 206: The filename or
+extension is too long" and leaves a broken install. Enabling long paths in Windows also
+fixes it.
+
 Then fetch and verify the data (about 15 minutes on a fast connection) and embed it:
 
 ```
